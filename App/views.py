@@ -3,6 +3,8 @@ from werkzeug.security import check_password_hash
 
 from .forms import RegisterForm, LoginForm
 from .models import *
+from werkzeug.security import generate_password_hash, check_password_hash
+
 
 blue = Blueprint('user',__name__)
 @blue.route('/')
@@ -29,7 +31,7 @@ def login():
             username = form.signInUsernameField.data
             password = form.signInPasswordField.data
             user = User.query.filter_by(username=username).first()
-            if user.password == password:
+            if user and check_password_hash(user.password, password):
                 print("password correct and find it ")
                 response = redirect('/home')
                 session['UID'] = user.UID
@@ -52,7 +54,9 @@ def register():
             email = form.signUpEmailField.data
             username = form.signUpUsernameField.data
             password = form.signUpPasswordField.data
-            user = User(username=username,password=password,email=email,status=2)
+            hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
+            user = User(username=username, password=hashed_password, email=email, status=2)
+
             db.session.add(user)
             db.session.commit()
             response = redirect('/home')
