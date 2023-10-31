@@ -1,44 +1,47 @@
-from flask import Blueprint, request, redirect, flash, url_for, render_template
+from flask import Blueprint, request, redirect, flash, url_for, render_template, session
+from werkzeug.security import check_password_hash
 
 from .forms import RegisterForm, LoginForm
 from .models import *
 
 blue = Blueprint('user',__name__)
 
-@blue.route('/', methods=['GET', 'POST'])  # 直接将根URL指向login函数
+@blue.route('/', methods=['GET', 'POST'])
 def login():
-    form = LoginForm(request.form)
-    if request.method == 'POST' and form.validate():
-        username = form.signInUsernameField.data
-        password = form.signInPasswordField.data
-
-        user = User.query.filter_by(username=username).first()
-
-        if user and user.check_password(password):
-            flash('Logged in successfully!', 'success')
-            return redirect(url_for('user.hello_world'))  # Redirect to a protected page or dashboard
+    if request.method == 'GET':
+        return render_template('login.html')
+    elif request.method == 'POST':
+        form = LoginForm(request.form)
+        if form.validate():
+            username = form.signInUsernameField.data  # 修改这里
+            password = form.signInPasswordField.data  # 修改这里
+            user = User.query.filter_by(username=username).first()
+            if check_password_hash(user.password, password):
+                response = redirect('/home')
+                session['UID'] = user.UID
+                return response
+            else:
+                return render_template('login.html', errors="the password is wrong")
         else:
-            flash('Login failed. Check your username and password.', 'danger')
-
-    return render_template('login.html', form=form)
-
+            return render_template('login.html', errors=form.errors)
 @blue.route('/register', methods=['GET', 'POST'])
 def register():
-    form = RegisterForm(request.form)
-    if request.method == 'POST' and form.validate():
-        email = form.signUpEmailField.data
-        username = form.signUpUsernameField.data
-        password = form.signUpPasswordField.data
-
-        new_user = User(email=email, username=username,
-                        password=password)
-        db.session.add(new_user)
-        db.session.commit()
-
-        flash('Registration successful! Please login.', 'success')
-        return redirect(url_for('user.login'))
-
-    return render_template('register.html', form=form)
+    if request.method == 'GET':
+        return render_template('login.html')
+    elif request.method == 'POST':
+        form = RegisterForm(request.form)
+        if form.validate():
+            email = form.signUpEmailField.data  # 修改这里
+            username = form.signUpUsernameField.data  # 修改这里
+            password = form.signUpPasswordField.data  # 修改这里
+            user = User(username=username,password=password,email=email)
+            db.session.add(user)
+            db.session.commit()
+            response = redirect('/home')
+            session['UID'] = user.UID
+            return response
+        else:
+            return render_template('login.html', errors=form.errors)
 
 
 @blue.route('/home')
@@ -46,9 +49,6 @@ def home():# put application's code here
     return render_template('home.html')
 
 # Define a route for testing purposes
-@blue.route('/')
-def login():# put application's code here
-    return render_template('login.html')
 
 @blue.route('/whiteboard')
 def whiteboard():# put application's code here

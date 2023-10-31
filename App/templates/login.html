@@ -1,46 +1,48 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>Title</title>
-
-    <link rel="stylesheet" href="../static/login.css" /> <!-- Link to an external stylesheet -->
+    <link rel="stylesheet" href="../static/login.css" />
     <script>
-            function cambiar_login() {
-                document.querySelector('.cont_forms').className = "cont_forms cont_forms_active_login";
-                document.querySelector('.cont_form_login').style.display = "block";
-                document.querySelector('.cont_form_sign_up').style.opacity = "0";
-                setTimeout(function() {
-                    document.querySelector('.cont_form_login').style.opacity = "1";
-                }, 400);
-                setTimeout(function() {
-                    document.querySelector('.cont_form_sign_up').style.display = "none";
-                }, 200);
-            }
+        function cambiar_login() {
+            document.querySelector('.cont_forms').className = "cont_forms cont_forms_active_login";
+            document.querySelector('.cont_form_login').style.display = "block";
+            document.querySelector('.cont_form_sign_up').style.opacity = "0";
+            setTimeout(function() {
+                document.querySelector('.cont_form_login').style.opacity = "1";
+            }, 400);
+            setTimeout(function() {
+                document.querySelector('.cont_form_sign_up').style.display = "none";
+            }, 200);
+        }
 
-            function cambiar_sign_up() {
-                document.querySelector('.cont_forms').className = "cont_forms cont_forms_active_sign_up";
-                document.querySelector('.cont_form_sign_up').style.display = "block";
-                document.querySelector('.cont_form_login').style.opacity = "0";
-                setTimeout(function() {
-                    document.querySelector('.cont_form_sign_up').style.opacity = "1";
-                }, 100);
-                setTimeout(function() {
-                    document.querySelector('.cont_form_login').style.display = "none";
-                }, 400);
-            }
-            function ocultar_login_sign_up() {
-                document.querySelector('.cont_forms').className = "cont_forms";
-                document.querySelector('.cont_form_sign_up').style.opacity = "0";
-                document.querySelector('.cont_form_login').style.opacity = "0";
-                setTimeout(function() {
-                    document.querySelector('.cont_form_sign_up').style.display = "none";
-                    document.querySelector('.cont_form_login').style.display = "none";
-                }, 500);
+        function cambiar_sign_up() {
+            document.querySelector('.cont_forms').className = "cont_forms cont_forms_active_sign_up";
+            document.querySelector('.cont_form_sign_up').style.display = "block";
+            document.querySelector('.cont_form_login').style.opacity = "0";
+            setTimeout(function() {
+                document.querySelector('.cont_form_sign_up').style.opacity = "1";
+            }, 100);
+            setTimeout(function() {
+                document.querySelector('.cont_form_login').style.display = "none";
+            }, 400);
+        }
 
-            }
+        function ocultar_login_sign_up() {
+            document.querySelector('.cont_forms').className = "cont_forms";
+            document.querySelector('.cont_form_sign_up').style.opacity = "0";
+            document.querySelector('.cont_form_login').style.opacity = "0";
+            setTimeout(function() {
+                document.querySelector('.cont_form_sign_up').style.display = "none";
+                document.querySelector('.cont_form_login').style.display = "none";
+            }, 500);
+
+        }
     </script>
 </head>
+
 <body>
 
     <div class="cotn_principal">
@@ -60,59 +62,51 @@
                     <div class="col_md_sign_up">
                         <div class="cont_ba_opcitiy">
                             <h2>SIGN UP</h2>
-
-
                             <p>Lorem ipsum dolor sit amet, consectetur.</p>
-
                             <button class="btn_sign_up" onclick="cambiar_sign_up()">SIGN UP</button>
                         </div>
                     </div>
                 </div>
 
-
                 <div class="cont_back_info">
                     <div class="cont_img_back_grey">
-                        <img src="../static/Pics/signUp.png" alt="sigh up image" />
+                        <img src="../static/Pics/signUp.png" alt="sign up image" />
                     </div>
-
                 </div>
+
                 <div class="cont_forms">
                     <div class="cont_img_back_">
-                        <img src="../static/Pics/signIn.png" alt="sigh In image" />
-                    </div>
-                    <div class="cont_form_login">
-                        <a href="#" onclick="ocultar_login_sign_up()"><i class="material-icons">&#xE5C4;</i></a>
-                        <h2>LOGIN</h2>
-                        <input type="text" placeholder="Email" />
-                        <input type="password" placeholder="Password" />
-                        <button class="btn_login" onclick="cambiar_login()">LOGIN</button>
+                        <img src="../static/Pics/signIn.png" alt="sign In image" />
                     </div>
 
-                    <div class="cont_form_sign_up">
+                    <!-- 登录表单 -->
+                    <form class="cont_form_login" action="/" method="POST">
+                        <a href="#" onclick="ocultar_login_sign_up()"><i class="material-icons">&#xE5C4;</i></a>
+                        <h2>LOGIN</h2>
+                        <input type="text" name="signInUsernameField" placeholder="Email" />
+                        <input type="password" name="signInPasswordField" placeholder="Password" />
+                        <button type="submit" class="btn_login">LOGIN</button>
+                    </form>
+
+                    <!-- 注册表单 -->
+                    <form class="cont_form_sign_up" action="/register" method="POST">
                         <a href="#" onclick="ocultar_login_sign_up()"><i class="material-icons">&#xE5C4;</i></a>
                         <h2>SIGN UP</h2>
-                        <input type="text" placeholder="Email" />
-                        <input type="text" placeholder="User" />
-                        <input type="password" placeholder="Password" />
-                        </br>
+                        <input type="text" name="signUpEmailField" placeholder="Email" />
+                        <input type="text" name="signUpUsernameField" placeholder="User" />
+                        <input type="password" name="signUpPasswordField" placeholder="Password" />
                         <select name="status">
                             <option value="" disabled selected>Status</option>
                             <option value="option1">Conded</option>
                             <option value="option2">Option 2</option>
                             <option value="Admin">Admin</option>
                         </select>
-                        </br>
-                        <button class="btn_sign_up" onclick="cambiar_sign_up()">SIGN UP</button>
-
-                    </div>
-
+                        <button type="submit" class="btn_sign_up">SIGN UP</button>
+                    </form>
                 </div>
-
             </div>
         </div>
     </div>
-
-    <script src="js/index.js"></script>
-
 </body>
+
 </html>

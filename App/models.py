@@ -1,5 +1,4 @@
 from .extents import db
-
 class User(db.Model):
     __tablename__ = 'user'
     UID = db.Column(db.Integer, primary_key=True, autoincrement=True)
