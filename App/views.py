@@ -5,8 +5,13 @@ from .forms import RegisterForm, LoginForm
 from .models import *
 
 blue = Blueprint('user',__name__)
+@blue.route('/')
+@blue.route('/loginAndRegister')
+def loginAndRegister():
+    return render_template('login.html')
 
-@blue.route('/', methods=['GET', 'POST'])
+
+@blue.route('/login', methods=['GET', 'POST'])
 def login():
     print("checked")
 
@@ -18,12 +23,13 @@ def login():
     elif request.method == 'POST':
         print("POST")
         form = LoginForm(request.form)
+        print(form.data)
         if form.validate():
-            print("get form ")
+            print("get form") # here need to consider why
             username = form.signInUsernameField.data
             password = form.signInPasswordField.data
             user = User.query.filter_by(username=username).first()
-            if check_password_hash(user.password, password):
+            if user.password == password:
                 print("password correct and find it ")
                 response = redirect('/home')
                 session['UID'] = user.UID
@@ -40,11 +46,12 @@ def register():
         return render_template('login.html')
     elif request.method == 'POST':
         form = RegisterForm(request.form)
+        print("get form")
         if form.validate():
-            email = form.signUpEmailField.data  # 修改这里
-            username = form.signUpUsernameField.data  # 修改这里
-            password = form.signUpPasswordField.data  # 修改这里
-            user = User(username=username,password=password,email=email)
+            email = form.signUpEmailField.data
+            username = form.signUpUsernameField.data
+            password = form.signUpPasswordField.data
+            user = User(username=username,password=password,email=email,status=2)
             db.session.add(user)
             db.session.commit()
             response = redirect('/home')
