@@ -8,15 +8,23 @@ blue = Blueprint('user',__name__)
 
 @blue.route('/', methods=['GET', 'POST'])
 def login():
+    print("checked")
+
     if request.method == 'GET':
+        print("GET")
         return render_template('login.html')
+
+
     elif request.method == 'POST':
+        print("POST")
         form = LoginForm(request.form)
         if form.validate():
-            username = form.signInUsernameField.data  # 修改这里
-            password = form.signInPasswordField.data  # 修改这里
+            print("get form ")
+            username = form.signInUsernameField.data
+            password = form.signInPasswordField.data
             user = User.query.filter_by(username=username).first()
             if check_password_hash(user.password, password):
+                print("password correct and find it ")
                 response = redirect('/home')
                 session['UID'] = user.UID
                 return response
@@ -24,6 +32,8 @@ def login():
                 return render_template('login.html', errors="the password is wrong")
         else:
             return render_template('login.html', errors=form.errors)
+    else:
+        print("fail")
 @blue.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'GET':
@@ -45,7 +55,7 @@ def register():
 
 
 @blue.route('/home')
-def home():# put application's code here
+def home():
     return render_template('home.html')
 
 # Define a route for testing purposes

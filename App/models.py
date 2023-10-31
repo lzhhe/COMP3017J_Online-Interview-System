@@ -5,7 +5,7 @@ class User(db.Model):
     username = db.Column(db.String(30), unique=True, nullable=False)
     password = db.Column(db.String(256), nullable=False)
     email = db.Column(db.String(30), nullable=False)
-    status = db.Column(db.Integer, nullable=False, default=2)
+    status = db.Column(db.Integer, nullable=False, default=2) # admin 0 interviewer 1 user 2
 
 class Position(db.Model):
     __tablename__ = 'position'

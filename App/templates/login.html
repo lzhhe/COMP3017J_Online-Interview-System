@@ -83,7 +83,7 @@
                     <form class="cont_form_login" action="/" method="POST">
                         <a href="#" onclick="ocultar_login_sign_up()"><i class="material-icons">&#xE5C4;</i></a>
                         <h2>LOGIN</h2>
-                        <input type="text" name="signInUsernameField" placeholder="Email" />
+                        <input type="email" name="signInUsernameField" placeholder="Email" />
                         <input type="password" name="signInPasswordField" placeholder="Password" />
                         <button type="submit" class="btn_login">LOGIN</button>
                     </form>
@@ -92,14 +92,14 @@
                     <form class="cont_form_sign_up" action="/register" method="POST">
                         <a href="#" onclick="ocultar_login_sign_up()"><i class="material-icons">&#xE5C4;</i></a>
                         <h2>SIGN UP</h2>
-                        <input type="text" name="signUpEmailField" placeholder="Email" />
+                        <input type="email" name="signUpEmailField" placeholder="Email" />
                         <input type="text" name="signUpUsernameField" placeholder="User" />
                         <input type="password" name="signUpPasswordField" placeholder="Password" />
                         <select name="status">
                             <option value="" disabled selected>Status</option>
-                            <option value="option1">Conded</option>
-                            <option value="option2">Option 2</option>
                             <option value="Admin">Admin</option>
+                            <option value="Interviewer">Interviewer</option>
+                            <option value="User">User</option>
                         </select>
                         <button type="submit" class="btn_sign_up">SIGN UP</button>
                     </form>
