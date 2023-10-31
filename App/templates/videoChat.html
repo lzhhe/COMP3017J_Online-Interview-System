@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Video Test</title>
+</head>
+<body>
+    <video id="video" width="1000" height="auto" autoplay></video>
+    <script>
+        const constraints = {
+            video: true
+        };
+
+        const video = document.getElementById('video');
+
+        function handleSuccess(stream) {
+            video.srcObject = stream;
+        }
+
+        function handleError(error) {
+            console.error('getUserMedia error: ', error);
+        }
+
+        navigator.mediaDevices.getUserMedia(constraints).then(handleSuccess).catch(handleError);
+    </script>
+</body>
+</html>

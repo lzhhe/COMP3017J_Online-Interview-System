@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Python Code Executor</title>
+    <style>
+        #output {
+            border: 1px solid #ccc;
+            padding: 10px;
+            width: 400px;
+            height: 200px;
+            overflow-y: scroll;
+            background-color: #f4f4f4;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <textarea id="pythonCode" rows="10" cols="50"></textarea>
+    <button onclick="executePythonCode()">Run Code</button>
+    <div>
+        <strong>Console Output:</strong>
+        <pre id="output"></pre>
+    </div>
+
+    <script>
+        async function executePythonCode() {
+            const code = document.getElementById('pythonCode').value;
+            const response = await fetch('/execute', {
+                method: 'POST',
+                body: JSON.stringify({ code }),
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            const result = await response.json();
+            document.getElementById('output').textContent = result.output;
+        }
+    </script>
+</body>
+</html>

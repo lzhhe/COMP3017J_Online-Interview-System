@@ -1,19 +1,23 @@
-from flask import render_template
-
+from flask import Flask, request, jsonify,render_template
+import subprocess
+import sys
 from App import create_app
 
 app = create_app()
 
 
-# Define a route for testing purposes
-@app.route('/home')
-def home():
-    return render_template('home.html')
+@app.route('/execute', methods=['POST'])
+def execute():
+    data = request.json
+    code = data['code']
 
-# Define a route for testing purposes
-@app.route('/')
-def login():
-    return render_template('login.html')
+    # CAUTION: This method of executing code can be unsafe. You may want to use a sandbox or other security mechanism.
+    try:
+        output = subprocess.check_output([sys.executable, "-c", code], stderr=subprocess.STDOUT, text=True)
+    except subprocess.CalledProcessError as e:
+        output = e.output
+
+    return jsonify({"output": output})
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
