@@ -39,3 +39,17 @@ def register():
         return redirect(url_for('user.login'))
 
     return render_template('register.html', form=form)
+
+
+@blue.route('/home')
+def home():# put application's code here
+    return render_template('home.html')
+
+# Define a route for testing purposes
+@blue.route('/')
+def login():# put application's code here
+    return render_template('login.html')
+
+@blue.route('/whiteboard')
+def whiteboard():# put application's code here
+    return render_template('whiteboard.html')
