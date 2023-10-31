@@ -18,7 +18,7 @@ class RegisterForm(wtforms.Form):
     signUpPasswordField = wtforms.StringField('Password', validators=[Length(min=6, max=14, message="please input the right length")])
 
     def validate_signUpUsernameField(self, field):
-        username = field.data
-        user = User.query.filter_by(username=username).first()
+        email = field.data
+        user = User.query.filter_by(email=email).first()
         if user:
-            raise wtforms.ValidationError(message="the username has been existed")
+            raise wtforms.ValidationError(message="the email has been existed")

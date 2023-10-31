@@ -47,6 +47,7 @@ def register():
     elif request.method == 'POST':
         form = RegisterForm(request.form)
         print("get form")
+        print (form.data)
         if form.validate():
             email = form.signUpEmailField.data
             username = form.signUpUsernameField.data
