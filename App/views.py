@@ -53,7 +53,7 @@ def register():
             email = form.signUpEmailField.data
             username = form.signUpUsernameField.data
             password = form.signUpPasswordField.data
-            status = form.signUpStuatusField.data
+            status = form.signUpStatusField.data
             hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
             user = User(username=username, password=hashed_password, email=email, status=status)
             db.session.add(user)

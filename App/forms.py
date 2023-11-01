@@ -16,7 +16,7 @@ class RegisterForm(wtforms.Form):
     signUpEmailField = wtforms.StringField('Email')
     signUpUsernameField = wtforms.StringField('User', validators=[Length(min=1, max=50, message="please input the right length")])
     signUpPasswordField = wtforms.StringField('Password', validators=[Length(min=6, max=14, message="please input the right length")])
-    signUpStuatusField = wtforms.StringField('Status')
+    signUpStatusField = wtforms.IntegerField('Status')
     def validate_signUpUsernameField(self, field):
         email = field.data
         user = User.query.filter_by(email=email).first()
