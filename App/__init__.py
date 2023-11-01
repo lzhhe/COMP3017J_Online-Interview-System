@@ -6,8 +6,7 @@ from .extents import init_exts
 HOSTNAME = "127.0.0.1"
 PORT = 3306
 USERNAME = "root"
-# PASSWORD = "2003721gavin?"
-PASSWORD = "131a2abLZH"
+PASSWORD = "2003721gavin?"
 FLASK_DB = "online_interview_system"
 
 

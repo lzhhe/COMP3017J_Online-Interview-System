@@ -5,8 +5,9 @@ from App.forms import RegisterForm, LoginForm
 from App.models import *
 from werkzeug.security import generate_password_hash, check_password_hash
 
+blue = Blueprint('user', __name__)
 
-blue = Blueprint('user',__name__)
+
 @blue.route('/')
 @blue.route('/loginAndRegister')
 def loginAndRegister():
@@ -41,6 +42,7 @@ def login():
         else:
             return render_template('login.html', errors=form.errors)
 
+
 @blue.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'GET':
@@ -67,11 +69,12 @@ def register():
 
 
 @blue.route('/home')
-def home():# put application's code here
+def home():  # put application's code here
     return render_template('home.html')
+
 
 # Define a route for testing purposes
 
-@blue.route('/videoChat')
-def whiteboard():# put application's code here
-    return render_template('videoChat.html')
+@blue.route('/video')
+def video():  # put application's code here
+    return render_template('video.html')
