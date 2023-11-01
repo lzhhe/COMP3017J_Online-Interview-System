@@ -15,6 +15,13 @@ class Position(db.Model):
     positionRequirement = db.Column(db.String(1000), nullable=False)
     salary = db.Column(db.Integer, nullable=False)
 
+
+
+class MeetingRoom(db.Model):
+    __tablename__='meetingRoom'
+    MID = db.Column(db.Integer, primary_key=True, autoincrement=True)
+
+
 class InterviewResult(db.Model):
     __tablename__ = 'interviewResult'
     UID = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -28,3 +35,6 @@ class Application(db.Model):
     UID = db.Column(db.Integer, db.ForeignKey('user.UID'), primary_key=True)
     PID = db.Column(db.Integer, db.ForeignKey('position.PID'), primary_key=True)
     salary = db.Column(db.Integer)
+
+
+

@@ -15,24 +15,24 @@ def loginAndRegister():
 
 @blue.route('/login', methods=['GET', 'POST'])
 def login():
-    print("checked")
+    # print("checked")
 
     if request.method == 'GET':
-        print("GET")
+        # print("GET")
         return render_template('login.html')
 
 
     elif request.method == 'POST':
-        print("POST")
+        # print("POST")
         form = LoginForm(request.form)
         print(form.data)
         if form.validate():
-            print("get form") # here need to consider why
+            # print("get form") # here need to consider why
             username = form.signInUsernameField.data
             password = form.signInPasswordField.data
             user = User.query.filter_by(username=username).first()
             if user and check_password_hash(user.password, password):
-                print("password correct and find it ")
+                # print("password correct and find it ")
                 response = redirect('/home')
                 session['UID'] = user.UID
                 return response
@@ -40,23 +40,22 @@ def login():
                 return render_template('login.html', errors="the password is wrong")
         else:
             return render_template('login.html', errors=form.errors)
-    else:
-        print("fail")
+
 @blue.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'GET':
         return render_template('login.html')
     elif request.method == 'POST':
         form = RegisterForm(request.form)
-        print("get form")
-        print (form.data)
+        # print("get form")
+        # print (form.data)
         if form.validate():
             email = form.signUpEmailField.data
             username = form.signUpUsernameField.data
             password = form.signUpPasswordField.data
+            status = form.signUpStuatusField.data
             hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
-            user = User(username=username, password=hashed_password, email=email, status=2)
-
+            user = User(username=username, password=hashed_password, email=email, status=status)
             db.session.add(user)
             db.session.commit()
             response = redirect('/home')
