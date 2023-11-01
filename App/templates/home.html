@@ -1,89 +1,134 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>home</title>
-    <link rel="stylesheet" href="../static/home.css" /> <!-- Link to an external stylesheet -->
+    <link rel="stylesheet" href="../static/home.css" />
     <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            const currentDate = new Date();
+        document.addEventListener("DOMContentLoaded", function() {
+            let currentDate = new Date();
             const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-            document.querySelector(".calendar-header h1").textContent = monthNames[currentDate.getMonth()];
-            document.querySelector(".calendar-header p").textContent = currentDate.getFullYear();
 
-            const firstDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
-            const lastDay = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+            function updateCalendar() {
+                document.querySelector("#monthName").value = monthNames[currentDate.getMonth()];
+                document.querySelector("#year").value = currentDate.getFullYear();
 
-            let daysStr = '';
+                const firstDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+                const lastDay = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
 
-            for (let i = 1; i < firstDay.getDay(); i++) {
-                daysStr += '<div class="day day--disabled"></div>';
+                let daysStr = '';
+
+                for (let i = 1; i < firstDay.getDay(); i++) {
+                    daysStr += '<div class="day day--disabled"></div>';
+                }
+
+                for (let i = 1; i <= lastDay.getDate(); i++) {
+                    daysStr += `<div class="day">${i}</div>`;
+                }
+
+                document.querySelector(".calendar").innerHTML = daysStr;
             }
 
-            for (let i = 1; i <= lastDay.getDate(); i++) {
-                daysStr += `<div class="day">${i}</div>`;
-            }
+            document.querySelector("#prevMonth").addEventListener("click", function() {
+                currentDate.setMonth(currentDate.getMonth() - 1);
+                updateCalendar();
+            });
 
-            document.querySelector(".calendar").innerHTML += daysStr;
+            document.querySelector("#nextMonth").addEventListener("click", function() {
+                currentDate.setMonth(currentDate.getMonth() + 1);
+                updateCalendar();
+            });
+
+            updateCalendar();
         });
+
     </script>
 </head>
+
 <body>
-<h1>Check out your interviews!</h1>
-<div class="calendar-container">
-    <div class="calendar-header">
-        <h1>
-       November
-      <button>▾</button>
-    </h1>
-        <p>2023</p>
+    <h1>Check out your interviews!</h1>
+    <div class="calendar-container">
+        <div class="calendar-header">
+            <button id="prevMonth">←</button>
+            <select id="monthName" onchange="updateCalendar()">
+                <option>January</option>
+                <option>February</option>
+                <option>March</option>
+                <option>April</option>
+                <option>May</option>
+                <option>June</option>
+                <option>July</option>
+                <option>August</option>
+                <option>September</option>
+                <option>October</option>
+                <option>November</option>
+                <option>December</option>
+            </select>
+            <input type="number" id="year" disabled>
+            <button id="nextMonth">→</button>
+        </div>
+        <div class="calendar">
+            <span class="day-name">Mon</span>
+            <span class="day-name">Tue</span>
+            <span class="day-name">Wed</span>
+            <span class="day-name">Thu</span>
+            <span class="day-name">Fri</span>
+            <span class="day-name">Sat</span>
+            <span class="day-name">Sun</span>
+            <!-- Dates will be filled by the JS -->
+        </div>
+
+
     </div>
-    <div class="calendar"><span class="day-name">Mon</span><span class="day-name">Tue</span><span class="day-name">Wed</span><span class="day-name">Thu</span><span class="day-name">Fri</span><span class="day-name">Sat</span><span class="day-name">Sun</span>
-        <div class="day day--disabled">30</div>
-        <div class="day day--disabled">31</div>
-        <div class="day">1</div>
-        <div class="day">2</div>
-        <div class="day">3</div>
-        <div class="day">4</div>
-        <div class="day">5</div>
-        <div class="day">6</div>
-        <div class="day">7</div>
-        <div class="day">8</div>
-        <div class="day">9</div>
-        <div class="day">10</div>
-        <div class="day">11</div>
-        <div class="day">12</div>
-        <div class="day">13</div>
-        <div class="day">14</div>
-        <div class="day">15</div>
-        <div class="day">16</div>
-        <div class="day">17</div>
-        <div class="day">18</div>
-        <div class="day">19</div>
-        <div class="day">20</div>
-        <div class="day">21</div>
-        <div class="day">22</div>
-        <div class="day">23</div>
-        <div class="day">24</div>
-        <div class="day">25</div>
-        <div class="day">26</div>
-        <div class="day">27</div>
-        <div class="day">28</div>
-        <div class="day">29</div>
-        <div class="day">30</div>
-        <div class="day">31</div>
-        <div class="day day--disabled">1</div>
-        <div class="day day--disabled">2</div>
-        <section class="task task--warning">Projects</section>
-        <section class="task task--danger">Design Sprint</section>
-        <section class="task task--primary">Product Checkup 1
-            <div class="task__detail">
-                <h2>Product Checkup 1</h2>
-                <p>15-17th November</p>
-            </div>
-        </section>
-        <section class="task task--info">Product Checkup 2</section>
-    </div>
-</div>
+    <br>
+    <br>
+    <br>
+ <!-- 表单用于添加预约时间和面试岗位 -->
+    <form id="appointment-form">
+        <label for="appointment-time">appointment time</label>
+        <input type="text" id="appointment-time" required>
+        <br>
+        <label for="interview-position">interview position</label>
+        <input type="text" id="interview-position" required>
+        <br>
+        <button type="button" onclick="addAppointment()">add appointment</button>
+    </form>
+
+    <!-- 列表用于显示预约信息 -->
+    <ul id="appointment-list"></ul>
+
+    <script>
+        function addAppointment() {
+            // 获取输入的时间和岗位
+            var appointmentTime = document.getElementById("appointment-time").value;
+            var interviewPosition = document.getElementById("interview-position").value;
+
+            if (appointmentTime && interviewPosition) {
+                // 创建列表项并添加到列表中
+                var listItem = document.createElement("li");
+                listItem.textContent = appointmentTime + " - " + interviewPosition;
+
+                // 创建删除按钮
+                var deleteButton = document.createElement("button");
+                deleteButton.textContent = "delete";
+                deleteButton.onclick = function () {
+                    listItem.remove();
+                };
+
+                // 将删除按钮添加到列表项
+                listItem.appendChild(deleteButton);
+
+                // 将列表项添加到预约列表
+                document.getElementById("appointment-list").appendChild(listItem);
+
+                // 清空输入字段
+                document.getElementById("appointment-time").value = "";
+                document.getElementById("interview-position").value = "";
+            }
+        }
+    </script>
+    <a href="videoChat.html"><button>Go to Video Chat</button></a>
 </body>
+
 </html>

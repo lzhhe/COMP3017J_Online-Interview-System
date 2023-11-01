@@ -1,41 +1,43 @@
-// 以下的内容是用于绘制白板，使用了canvas来实现
-// 获取画布元素和其2D渲染上下文
 const canvas = document.getElementById('whiteboard');
 const ctx = canvas.getContext('2d');
 
-// 设置一个布尔值变量“drawing”来判断是否正在进行绘图
 let drawing = false;
 
-// 使用canvas相关函数检索鼠标状态，当鼠标左键按下时，设置绘图为true
-canvas.addEventListener('mousedown', () => drawing = true);
+canvas.addEventListener('mousedown', () => {
+    drawing = true;
+});
 
-// 当鼠标左键抬起时，设置绘图为false并开始一个新的路径
 canvas.addEventListener('mouseup', () => {
     drawing = false;
     ctx.beginPath();
 });
 
-// 鼠标按下时移动时进行绘图
 canvas.addEventListener('mousemove', draw);
 
 function draw(event) {
-    // 如果不在绘图状态，则不执行绘图操作，根据drawing的值来进行判断
     if (!drawing) return;
-    // TODO：设置线宽和线的端点样式（目前还是默认值，之后可以考虑加入组件控制线条宽度和样式）
-    ctx.lineWidth = 5;
+    ctx.lineWidth = document.getElementById('brushSize').value;
     ctx.lineCap = 'round';
-    // 获取颜色选择器的值作为线条颜色
-    ctx.strokeStyle = document.getElementById('colorPicker').value;
-    // 绘制线条
+
     ctx.lineTo(event.clientX - canvas.offsetLeft, event.clientY - canvas.offsetTop);
     ctx.stroke();
     ctx.beginPath();
     ctx.moveTo(event.clientX - canvas.offsetLeft, event.clientY - canvas.offsetTop);
 }
-// 这里获取colorPicker的颜色变化，当颜色选择器的值改变时，更新线条颜色
+
 document.getElementById('colorPicker').addEventListener('change', (event) => {
     ctx.strokeStyle = event.target.value;
 });
+
+document.getElementById('brushSize').addEventListener('input', (event) => {
+    document.getElementById('brushSizeDisplay').textContent = event.target.value;
+});
+
+document.getElementById('eraser').addEventListener('click', clearCanvas);
+
+function clearCanvas() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+}
 
 
 // 以下内容为关于调用摄像头的代码
@@ -81,3 +83,22 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 });
+
+//以下是关于日历日程的部分，目前还没做好
+// function updateCalendar() {
+//     // ... [other code]
+//
+//     for (let i = 1; i <= lastDay.getDate(); i++) {
+//         daysStr += `<div class="day">${i}`;
+//
+//         // Check if there are any tasks for this date
+//         const tasksForThisDate = document.querySelectorAll(`.task[data-start-date<="${i}"][data-end-date>="${i}"]`);
+//         tasksForThisDate.forEach(task => {
+//             daysStr += task.outerHTML;
+//         });
+//
+//         daysStr += `</div>`;
+//     }
+//
+//     // ... [other code]
+// }

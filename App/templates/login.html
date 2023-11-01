@@ -93,13 +93,13 @@
                     <a href="#" onclick="ocultar_login_sign_up()"><i class="material-icons">&#xE5C4;</i></a>
                     <h2>SIGN UP</h2>
                     <input type="email" name="signUpEmailField" placeholder="Email" />
-                    <input type="text" name="signUpUsernameField" placeholder="User" />
-                    <input type="password" name="signUpPasswordField" placeholder="Password" />
-                    <select name="status">
+                    <input type="text" name="signUpUsernameField" placeholder="User(1-50characters)" />
+                    <input type="password" name="signUpPasswordField" placeholder="Password(6-14characters)" />
+                    <select name="signUpStatusField" bplaceholder="Status">
                         <option value="" disabled selected>Status</option>
-                        <option value="Admin">Admin</option>
-                        <option value="Interviewer">Interviewer</option>
-                        <option value="User">User</option>
+                        <option value= 2 >Candidate</option>
+                        <option value= 1 >Interviewer</option>
+                        <option value= 0 >Admin</option>
                     </select>
                     <button type="submit" class="btn_sign_up">SIGN UP</button>
                 </form>

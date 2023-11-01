@@ -1,8 +1,8 @@
 from flask import Blueprint, request, redirect, flash, url_for, render_template, session
 from werkzeug.security import check_password_hash
 
-from .forms import RegisterForm, LoginForm
-from .models import *
+from App.forms import RegisterForm, LoginForm
+from App.models import *
 from werkzeug.security import generate_password_hash, check_password_hash
 
 
@@ -54,6 +54,7 @@ def register():
             username = form.signUpUsernameField.data
             password = form.signUpPasswordField.data
             status = form.signUpStatusField.data
+            print(status)
             hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
             user = User(username=username, password=hashed_password, email=email, status=status)
             db.session.add(user)
@@ -66,11 +67,11 @@ def register():
 
 
 @blue.route('/home')
-def home():
+def home():# put application's code here
     return render_template('home.html')
 
 # Define a route for testing purposes
 
-@blue.route('/whiteboard')
+@blue.route('/videoChat')
 def whiteboard():# put application's code here
-    return render_template('whiteboard.html')
+    return render_template('videoChat.html')
