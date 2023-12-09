@@ -22,3 +22,5 @@ class RegisterForm(wtforms.Form):
         user = User.query.filter_by(email=email).first()
         if user:
             raise wtforms.ValidationError(message="the email has been existed")
+
+

@@ -4,9 +4,74 @@
 <head>
     <meta charset="UTF-8">
     <title>home</title>
-    <link rel="stylesheet" href="../static/home.css" />
+    <link rel="stylesheet" href="../static/home.css"/>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
-        document.addEventListener("DOMContentLoaded", function() {
+        $(document).ready(function () {
+            // Fetch positions and available times when the document is ready
+            fetchPositions();
+            fetchAvailableTimes();
+
+            // Function to fetch positions from the server
+            function fetchPositions() {
+                $.ajax({
+                    url: '/get-positions', // URL to your backend endpoint that returns positions
+                    type: 'GET',
+                    success: function (positions) {
+                        positions.forEach(function (position) {
+                            $('#positionSelect').append(`<option value="${position.PID}">${position.positionName}</option>`);
+                        });
+                    },
+                    error: function (error) {
+                        console.log('Error fetching positions:', error);
+                    }
+                });
+            }
+
+            // Function to fetch available times from the server
+            function fetchAvailableTimes() {
+                $.ajax({
+                    url: '/get-available-times', // URL to your backend endpoint that returns available times
+                    type: 'GET',
+                    success: function (times) {
+                        times.forEach(function (time) {
+                            $('#timeSelect').append(`<option value="${time.MID}">${time.startTime} - ${time.endTime}</option>`);
+                        });
+                    },
+                    error: function (error) {
+                        console.log('Error fetching times:', error);
+                    }
+                });
+            }
+
+            // Handle form submission
+            $('#applicationForm').on('submit', function (e) {
+                e.preventDefault(); // Prevents the default form submission
+
+                var applicationData = {
+                    position: $('#positionSelect').val(),
+                    time: $('#timeSelect').val(),
+                    salary: $('#expectedSalary').val(),
+                    introduction: $('#selfDescription').val()
+                };
+
+                console.log('Submitting application:', applicationData); // Debugging log
+
+                $.ajax({
+                    url: '/submit-application',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(applicationData),
+                    success: function (response) {
+                        alert('Application submitted successfully');
+                    },
+                    error: function (response) {
+                        alert('Error submitting application');
+                    }
+                });
+            });
+
+            // Calendar functionality
             let currentDate = new Date();
             const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
@@ -30,105 +95,169 @@
                 document.querySelector(".calendar").innerHTML = daysStr;
             }
 
-            document.querySelector("#prevMonth").addEventListener("click", function() {
+            document.querySelector("#prevMonth").addEventListener("click", function () {
                 currentDate.setMonth(currentDate.getMonth() - 1);
                 updateCalendar();
             });
 
-            document.querySelector("#nextMonth").addEventListener("click", function() {
+            document.querySelector("#nextMonth").addEventListener("click", function () {
                 currentDate.setMonth(currentDate.getMonth() + 1);
                 updateCalendar();
             });
 
             updateCalendar();
-        });
 
+
+            function fetchApplications() {
+                $.ajax({
+                    url: '/view-applications',
+                    type: 'GET',
+                    success: function (applications) {
+                        let tableHtml = '<table>';
+                        tableHtml += '<tr><th>Position Name</th><th>Time Period</th><th>Status</th></tr>'; // Table headers
+
+                        applications.forEach(function (app) {
+                            // Formatting status
+                            let statusText = app.status === 0 ? 'Reject' : 'Accept';
+
+                            tableHtml +=
+                                `<tr>
+                                    <td>${app.position}</td>
+                                    <td>${app.meeting_room.start_time} - ${app.meeting_room.end_time}</td>
+                                    <td>${statusText}</td>
+                                </tr>`;
+                        });
+
+                        tableHtml += '</table>';
+                        $('#applicationsList').html(tableHtml);
+                    },
+                    error: function (error) {
+                        console.log('Error fetching applications:', error);
+                        $('#applicationsList').html('Error fetching applications.');
+                    }
+                });
+            }
+
+            // Event listener for the 'View My Applications' button
+            $('#viewApplicationsButton').click(function () {
+                fetchApplications();
+            });
+
+            function fetchInterviewResults() {
+                $.ajax({
+                    url: '/view-interview-results',
+                    type: 'GET',
+                    success: function (results) {
+                        let tableHtml = '<table>';
+                        tableHtml += '<tr><th>Position Name</th><th>Time Period</th><th>Status</th></tr>'; // Table headers
+
+                        results.forEach(function (result) {
+                            tableHtml +=
+                                `<tr>
+                                <td>${result.positionName}</td>
+                                <td>${result.timePeriod}</td>
+                                <td>${result.status}</td>
+                            </tr>`;
+                        });
+
+                        tableHtml += '</table>';
+                        $('#interviewResultsList').html(tableHtml);
+                    },
+                    error: function (error) {
+                        console.log('Error fetching interview results:', error);
+                        $('#interviewResultsList').html('Error fetching interview results.');
+                    }
+                });
+            }
+
+            // Event listener for button click
+            $('#viewInterviewResultsButton').click(function () {
+                fetchInterviewResults();
+            });
+
+
+        });
     </script>
 </head>
 
 <body>
-    <h1>Check out your interviews!</h1>
-    <div class="calendar-container">
-        <div class="calendar-header">
-            <button id="prevMonth">←</button>
-            <select id="monthName" onchange="updateCalendar()">
-                <option>January</option>
-                <option>February</option>
-                <option>March</option>
-                <option>April</option>
-                <option>May</option>
-                <option>June</option>
-                <option>July</option>
-                <option>August</option>
-                <option>September</option>
-                <option>October</option>
-                <option>November</option>
-                <option>December</option>
-            </select>
-            <input type="number" id="year" disabled>
-            <button id="nextMonth">→</button>
-        </div>
-        <div class="calendar">
-            <span class="day-name">Mon</span>
-            <span class="day-name">Tue</span>
-            <span class="day-name">Wed</span>
-            <span class="day-name">Thu</span>
-            <span class="day-name">Fri</span>
-            <span class="day-name">Sat</span>
-            <span class="day-name">Sun</span>
-            <!-- Dates will be filled by the JS -->
-        </div>
 
 
+<h1>Check out your interviews!</h1>
+
+<div class="calendar-container">
+    <div class="calendar-header">
+        <button id="prevMonth">←</button>
+        <select id="monthName" onchange="updateCalendar()">
+            <option>January</option>
+            <option>February</option>
+            <option>March</option>
+            <option>April</option>
+            <option>May</option>
+            <option>June</option>
+            <option>July</option>
+            <option>August</option>
+            <option>September</option>
+            <option>October</option>
+            <option>November</option>
+            <option>December</option>
+        </select>
+        <input type="number" id="year" disabled>
+        <button id="nextMonth">→</button>
     </div>
-    <br>
-    <br>
-    <br>
+    <div class="calendar">
+        <span class="day-name">Mon</span>
+        <span class="day-name">Tue</span>
+        <span class="day-name">Wed</span>
+        <span class="day-name">Thu</span>
+        <span class="day-name">Fri</span>
+        <span class="day-name">Sat</span>
+        <span class="day-name">Sun</span>
+        <!-- Dates will be filled by the JS -->
+    </div>
 
- <!-- 表单用于添加预约时间和面试岗位 -->
-    <form id="appointment-form">
-        <label for="appointment-time">appointment time</label>
-        <input type="text" id="appointment-time" required>
+
+</div>
+
+<div class="application-form">
+    <h2>Submit Your Application</h2>
+    <form id="applicationForm">
+        <label for="positionSelect">Position:</label>
+        <select id="positionSelect" required>
+            <option value="">Select a position</option>
+            <!-- Positions will be filled by AJAX -->
+        </select>
         <br>
-        <label for="interview-position">interview position</label>
-        <input type="text" id="interview-position" required>
+
+        <label for="timeSelect">Available Interview Time:</label>
+        <select id="timeSelect" required>
+            <option value="">Select a time</option>
+
+        </select>
         <br>
-        <button type="button" onclick="addAppointment()">add appointment</button>
+
+        <label for="expectedSalary">Expected Salary:</label>
+        <input type="number" id="expectedSalary" required>
+        <br>
+
+        <label for="selfDescription">Self Description:</label>
+        <textarea id="selfDescription" required></textarea>
+        <br>
+
+        <button type="submit">Submit Application</button>
     </form>
+</div>
 
-    <!-- 列表用于显示预约信息 -->
-    <ul id="appointment-list"></ul>
+<div class="view-applications">
+    <button id="viewApplicationsButton">View My Applications</button>
+    <div id="applicationsList"></div>
+</div>
 
-    <script>
-        function addAppointment() {
-            // 获取输入的时间和岗位
-            var appointmentTime = document.getElementById("appointment-time").value;
-            var interviewPosition = document.getElementById("interview-position").value;
+<div class="view-interview-results">
+    <button id="viewInterviewResultsButton">View My interview result</button>
+    <div id="interviewResultsList"></div>
+</div>
 
-            if (appointmentTime && interviewPosition) {
-                // 创建列表项并添加到列表中
-                var listItem = document.createElement("li");
-                listItem.textContent = appointmentTime + " - " + interviewPosition;
-
-                // 创建删除按钮
-                var deleteButton = document.createElement("button");
-                deleteButton.textContent = "delete";
-                deleteButton.onclick = function () {
-                    listItem.remove();
-                };
-
-                // 将删除按钮添加到列表项
-                listItem.appendChild(deleteButton);
-
-                // 将列表项添加到预约列表
-                document.getElementById("appointment-list").appendChild(listItem);
-
-                // 清空输入字段
-                document.getElementById("appointment-time").value = "";
-                document.getElementById("interview-position").value = "";
-            }
-        }
-    </script>
 
 </body>
 
