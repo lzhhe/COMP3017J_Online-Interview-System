@@ -1,13 +1,9 @@
-import subprocess
-
 from flask import Blueprint, request, redirect, flash, url_for, render_template, session, jsonify
-from werkzeug.security import check_password_hash
 
 from App.forms import RegisterForm, LoginForm
 from App.models import *
 from werkzeug.security import generate_password_hash, check_password_hash
 
-from datetime import datetime
 
 
 
@@ -22,29 +18,32 @@ def loginAndRegister():
 
 @blue.route('/login', methods=['GET', 'POST'])
 def login():
-
     if request.method == 'GET':
         return render_template('login.html')
 
-
     elif request.method == 'POST':
-        # print("POST")
         form = LoginForm(request.form)
-        # print(form.data)
         if form.validate():
-            # print("get form") # here need to consider why
             username = form.signInUsernameField.data
             password = form.signInPasswordField.data
             user = User.query.filter_by(username=username).first()
+
             if user and check_password_hash(user.password, password):
-                # print("password correct and find it ")
-                response = redirect('/home')
                 session['UID'] = user.UID
-                return response
+                session['status'] = user.status  # Store user status in session
+
+                # Redirect based on user status
+                if user.status == 0:  # Admin
+                    return redirect(url_for('user.admin_home'))
+                elif user.status == 1:  # Interviewer/HR
+                    return redirect(url_for('user.interviewer_home'))
+                else:  # Regular User
+                    return redirect(url_for('user.home'))
             else:
-                return render_template('login.html', errors="the password is wrong")
+                return render_template('login.html', errors="The password is wrong or user does not exist.")
         else:
             return render_template('login.html', errors=form.errors)
+
 
 
 @blue.route('/register', methods=['GET', 'POST'])
@@ -72,6 +71,14 @@ def register():
 @blue.route('/home')
 def home():  # put application's code here
     return render_template('home.html')
+
+@blue.route('/admin_home')
+def admin_home():  # put application's code here
+    return render_template('admin_home.html')
+
+@blue.route('/interviewer_home')
+def interviewer_home():  # put application's code here
+    return render_template('interviewer_home.html')
 
 
 # Define a route for testing purposes

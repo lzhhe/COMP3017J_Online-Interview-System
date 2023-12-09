@@ -1,0 +1,190 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin Home{% endblock %}
+
+{% block head %}
+    <meta charset="UTF-8">
+    {#<link rel="stylesheet" href="../static/home.css"/>#}
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+{% endblock %}
+
+{% block content %}
+
+    <h1>Admin Dashboard</h1>
+    <h2>Applications</h2>
+    <div id="applicationsContainer"></div>
+
+    <div>
+        <h1>Add New Position</h1>
+        <form id="addPositionForm">
+            <label for="positionName">Position Name:</label>
+            <input type="text" id="positionName" name="positionName" required>
+            <br>
+
+            <label for="positionDescription">Position Description:</label>
+            <textarea id="positionDescription" name="positionDescription"></textarea>
+            <br>
+
+            <label for="positionRequirement">Position Requirement:</label>
+            <textarea id="positionRequirement" name="positionRequirement"></textarea>
+            <br>
+
+            <label for="salary">Salary:</label>
+            <input type="number" id="salary" name="salary" required>
+            <br>
+
+            <button type="submit">Submit</button>
+        </form>
+
+    </div>
+
+    <div>
+        <h1>Add New Meeting Room</h1>
+        <form id="addMeetingRoomForm">
+            <label for="date">Date:</label>
+            <input type="date" id="date" name="date" required>
+            <br>
+
+            <label for="startTime">Start Time:</label>
+            <input type="time" id="startTime" name="startTime" required>
+            <br>
+
+            <label for="endTime">End Time:</label>
+            <input type="time" id="endTime" name="endTime" required>
+            <br>
+
+            <button type="submit">Submit</button>
+        </form>
+    </div>
+
+
+
+    <script>
+        $(document).ready(function () {
+            fetchApplications();
+
+            function fetchApplications() {
+                $.ajax({
+                    url: '/admin/get-all-applications',
+                    type: 'GET',
+                    success: function (applications) {
+                        let tableHtml = '<table>';
+                        tableHtml += '<tr><th>Username</th><th>Time Period</th><th>Salary</th><th>Introduction</th><th>Actions</th></tr>'; // Table headers
+
+                        applications.forEach(function (app) {
+                            tableHtml +=
+                                `<tr>
+                                    <td>${app.username}</td>
+                                    <td>${app.timePeriod}</td>
+                                    <td>${app.salary}</td>
+                                    <td>${app.introduction}</td>
+                                    <td>
+                                        <button onclick="updateApplicationStatus(${app.applicationID}, 1)">Accept</button>
+                                        <button onclick="updateApplicationStatus(${app.applicationID}, 0)">Reject</button>
+                                    </td>
+                                </tr>`;
+                        });
+
+                        tableHtml += '</table>';
+                        $('#applicationsContainer').html(tableHtml);
+                    },
+                    error: function (error) {
+                        console.log('Error fetching applications:', error);
+                        $('#applicationsContainer').html('Error fetching applications.');
+                    }
+                });
+            }
+
+            window.updateApplicationStatus = function (applicationID, status) {
+                $.ajax({
+                    url: '/admin/update-application-status', // URL to your backend endpoint
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({applicationID: applicationID, status: status}),
+                    success: function (response) {
+                        alert('Application status updated successfully.');
+                        fetchApplications(); // Refresh the applications list
+                    },
+                    error: function (error) {
+                        console.log('Error updating application status:', error);
+                        alert('Error updating application status.');
+                    }
+                });
+            }
+
+            $('#addPositionForm').on('submit', function (e) {
+                e.preventDefault();
+
+                var formData = {
+                    positionName: $('#positionName').val(),
+                    positionDescription: $('#positionDescription').val(),
+                    positionRequirement: $('#positionRequirement').val(),
+                    salary: $('#salary').val()
+                };
+
+                $.ajax({
+                    url: '/admin/add-position',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(formData),
+                    success: function (response) {
+                        if (response.success) {
+                            alert('New position added successfully');
+                        } else {
+                            alert('Error: ' + response.error);
+                        }
+                    },
+                    error: function (response) {
+                        alert('Error submitting the form.');
+                    }
+                });
+            });
+
+            $('#addMeetingRoomForm').on('submit', function (e) {
+                e.preventDefault();
+
+                var date = $('#date').val();
+                var startTime = $('#startTime').val();
+                var endTime = $('#endTime').val();
+
+                // 基本验证
+                if (!date || !startTime || !endTime) {
+                    alert('Please fill all the fields.');
+                    return;
+                }
+
+                var formData = {
+                    date: date,
+                    startTime: startTime,
+                    endTime: endTime
+                };
+
+                console.log('Sending formData:', formData); // 打印发送的数据
+
+                $.ajax({
+                    url: '/admin/add-meeting-room',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(formData),
+                    success: function (response) {
+                        console.log('Response:', response); // 打印响应数据
+                        if (response.success) {
+                            alert('Meeting room added successfully');
+                        } else {
+                            alert('Error: ' + response.error);
+                        }
+                    },
+                    error: function (response) {
+                        console.log('Error response:', response); // 打印错误响应
+                        alert('Error submitting the form.');
+                    }
+                });
+            });
+
+
+        });
+    </script>
+{% endblock %}
+
+
+

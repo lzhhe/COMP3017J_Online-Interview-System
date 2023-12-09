@@ -3,9 +3,12 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>home</title>
+    {% extends 'base.html' %}
+    {% block title %}Home{% endblock %}
+
     <link rel="stylesheet" href="../static/home.css"/>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+{% block scripts %}
     <script>
         $(document).ready(function () {
             // Fetch positions and available times when the document is ready
@@ -71,41 +74,7 @@
                 });
             });
 
-            // Calendar functionality
-            let currentDate = new Date();
-            const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
-            function updateCalendar() {
-                document.querySelector("#monthName").value = monthNames[currentDate.getMonth()];
-                document.querySelector("#year").value = currentDate.getFullYear();
-
-                const firstDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
-                const lastDay = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
-
-                let daysStr = '';
-
-                for (let i = 1; i < firstDay.getDay(); i++) {
-                    daysStr += '<div class="day day--disabled"></div>';
-                }
-
-                for (let i = 1; i <= lastDay.getDate(); i++) {
-                    daysStr += `<div class="day">${i}</div>`;
-                }
-
-                document.querySelector(".calendar").innerHTML = daysStr;
-            }
-
-            document.querySelector("#prevMonth").addEventListener("click", function () {
-                currentDate.setMonth(currentDate.getMonth() - 1);
-                updateCalendar();
-            });
-
-            document.querySelector("#nextMonth").addEventListener("click", function () {
-                currentDate.setMonth(currentDate.getMonth() + 1);
-                updateCalendar();
-            });
-
-            updateCalendar();
 
 
             function fetchApplications() {
@@ -178,46 +147,13 @@
 
         });
     </script>
+{% endblock %}
 </head>
 
 <body>
 
-
+{% block content %}
 <h1>Check out your interviews!</h1>
-
-<div class="calendar-container">
-    <div class="calendar-header">
-        <button id="prevMonth">←</button>
-        <select id="monthName" onchange="updateCalendar()">
-            <option>January</option>
-            <option>February</option>
-            <option>March</option>
-            <option>April</option>
-            <option>May</option>
-            <option>June</option>
-            <option>July</option>
-            <option>August</option>
-            <option>September</option>
-            <option>October</option>
-            <option>November</option>
-            <option>December</option>
-        </select>
-        <input type="number" id="year" disabled>
-        <button id="nextMonth">→</button>
-    </div>
-    <div class="calendar">
-        <span class="day-name">Mon</span>
-        <span class="day-name">Tue</span>
-        <span class="day-name">Wed</span>
-        <span class="day-name">Thu</span>
-        <span class="day-name">Fri</span>
-        <span class="day-name">Sat</span>
-        <span class="day-name">Sun</span>
-        <!-- Dates will be filled by the JS -->
-    </div>
-
-
-</div>
 
 <div class="application-form">
     <h2>Submit Your Application</h2>
@@ -259,6 +195,7 @@
 </div>
 
 
+{% endblock %}
 </body>
 
 </html>
