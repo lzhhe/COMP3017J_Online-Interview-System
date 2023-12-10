@@ -8,72 +8,72 @@
     {% block head %}{% endblock %}
 </head>
 <body>
-    <div class="calendar-container">
-        <div class="calendar-header">
-            <button id="prevMonth">←</button>
-            <select id="monthName" onchange="updateCalendar()">
-                <option>January</option>
-                <option>February</option>
-                <option>March</option>
-                <option>April</option>
-                <option>May</option>
-                <option>June</option>
-                <option>July</option>
-                <option>August</option>
-                <option>September</option>
-                <option>October</option>
-                <option>November</option>
-                <option>December</option>
-            </select>
-            <input type="number" id="year" disabled>
-            <button id="nextMonth">→</button>
-        </div>
-        <div class="calendar">
-            <!-- Calendar will be filled by JS -->
-        </div>
+<div class="calendar-container">
+    <div class="calendar-header">
+        <button id="prevMonth">←</button>
+        <select id="monthName" onchange="updateCalendar()">
+            <option>January</option>
+            <option>February</option>
+            <option>March</option>
+            <option>April</option>
+            <option>May</option>
+            <option>June</option>
+            <option>July</option>
+            <option>August</option>
+            <option>September</option>
+            <option>October</option>
+            <option>November</option>
+            <option>December</option>
+        </select>
+        <input type="number" id="year" disabled>
+        <button id="nextMonth">→</button>
     </div>
+    <div class="calendar"></div>
+</div>
 
-    {% block content %}{% endblock %}
+{% block content %}{% endblock %}
 
-    <script>
-        $(document).ready(function () {
-            // Calendar functionality
-            let currentDate = new Date();
-            const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+<script>
+    $(document).ready(function () {
+        // Calendar functionality
+        let currentDate = new Date();
+        const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
-            function updateCalendar() {
-                document.querySelector("#monthName").value = monthNames[currentDate.getMonth()];
-                document.querySelector("#year").value = currentDate.getFullYear();
+        function updateCalendar() {
+            document.querySelector("#monthName").value = monthNames[currentDate.getMonth()];
+            document.querySelector("#year").value = currentDate.getFullYear();
 
-                const firstDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
-                const lastDay = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+            const firstDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+            const lastDay = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
 
-                let daysStr = '';
+            let daysStr = '';
 
-                for (let i = 1; i < firstDay.getDay(); i++) {
-                    daysStr += '<div class="day day--disabled"></div>';
-                }
-
-                for (let i = 1; i <= lastDay.getDate(); i++) {
-                    daysStr += `<div class="day">${i}</div>`;
-                }
-
-                document.querySelector(".calendar").innerHTML = daysStr;
+            for (let i = 1; i < firstDay.getDay(); i++) {
+                daysStr += '<div class="day day--disabled"></div>';
             }
 
-            document.querySelector("#prevMonth").addEventListener("click", function () {
-                currentDate.setMonth(currentDate.getMonth() - 1);
-                updateCalendar();
-            });
+            for (let i = 1; i <= lastDay.getDate(); i++) {
+                let date = new Date(currentDate.getFullYear(), currentDate.getMonth(), i);
+                let dateStr = date.toISOString().split('T')[0]; // 格式 YYYY-MM-DD
+                daysStr += `<div class="day" data-date="${dateStr}">${i}</div>`;
+            }
 
-            document.querySelector("#nextMonth").addEventListener("click", function () {
-                currentDate.setMonth(currentDate.getMonth() + 1);
-                updateCalendar();
-            });
+            document.querySelector(".calendar").innerHTML = daysStr;
+        }
 
+        document.querySelector("#prevMonth").addEventListener("click", function () {
+            currentDate.setMonth(currentDate.getMonth() - 1);
             updateCalendar();
         });
-    </script>
-    {% block scripts %}{% endblock %}
+
+        document.querySelector("#nextMonth").addEventListener("click", function () {
+            currentDate.setMonth(currentDate.getMonth() + 1);
+            updateCalendar();
+        });
+
+        updateCalendar();
+    });
+</script>
+{% block scripts %}{% endblock %}
 </body>
 </html>

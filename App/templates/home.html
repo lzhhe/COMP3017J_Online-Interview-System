@@ -9,6 +9,63 @@
     <link rel="stylesheet" href="../static/home.css"/>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 {% block scripts %}
+
+    {{ super() }}
+    <script>
+        function updateCalendarWithMeetingRooms() {
+            // 使用 AJAX 从后端获取会议室数据
+            $.ajax({
+                url: '/interviewer/get-all-meetingRooms', // 假设的 API 端点
+                type: 'GET',
+                success: function (meetingRooms) {
+                    // 根据会议室数据更新日历
+                    meetingRooms.forEach(function (room) {
+                        // 解析会议室开始和结束时间
+                        const startTime = new Date(room.startTime);
+                        const endTime = new Date(room.endTime);
+
+                        // 提取小时和分钟
+                        const startHours = startTime.getHours().toString().padStart(2, '0');
+                        const startMinutes = startTime.getMinutes().toString().padStart(2, '0');
+                        const endHours = endTime.getHours().toString().padStart(2, '0');
+                        const endMinutes = endTime.getMinutes().toString().padStart(2, '0');
+
+                        // 根据日期找到对应的日历格子
+                        const dateElement = document.querySelector(`.day[data-date='${startTime.toISOString().split('T')[0]}']`);
+                        if (dateElement) {
+                            // 根据状态设置颜色条的颜色
+                            const color = room.status === 0 ? 'blue' : 'orange';
+                            // 创建颜色条元素
+                            const colorBar = document.createElement('div');
+                            colorBar.style.backgroundColor = color;
+                            colorBar.style.height = (dateElement.offsetHeight / 6) + 'px'; // 设置颜色条的高度
+                            colorBar.style.width = '100%'; // 设置颜色条的宽度
+                            colorBar.classList.add('meeting-room-status');
+
+                            // 创建文本容器并添加到颜色条中
+                            const textContainer = document.createElement('div');
+                            textContainer.classList.add('meeting-room-text');
+                            textContainer.style.color = 'white'; // 根据需要设置合适的文本颜色
+                            textContainer.textContent = `${startHours}:${startMinutes} - ${endHours}:${endMinutes}`;
+
+                            colorBar.appendChild(textContainer);
+
+                            // 将颜色条添加到日历格子中
+                            dateElement.appendChild(colorBar);
+                        }
+                    });
+                },
+                error: function (error) {
+                    console.error('Error fetching meeting room data:', error);
+                }
+            });
+        }
+
+        $(document).ready(function () {
+            updateCalendarWithMeetingRooms();
+        });
+    </script>
+
     <script>
         $(document).ready(function () {
             // Fetch positions and available times when the document is ready
