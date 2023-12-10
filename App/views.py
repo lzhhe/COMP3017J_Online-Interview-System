@@ -4,9 +4,6 @@ from App.forms import RegisterForm, LoginForm
 from App.models import *
 from werkzeug.security import generate_password_hash, check_password_hash
 
-
-
-
 blue = Blueprint('user', __name__)
 
 
@@ -45,7 +42,6 @@ def login():
             return render_template('login.html', errors=form.errors)
 
 
-
 @blue.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'GET':
@@ -62,30 +58,29 @@ def register():
             user = User(username=username, password=hashed_password, email=email, status=status)
             db.session.add(user)
             db.session.commit()
-            response = redirect('/home')
-            session['UID'] = user.UID
-            return response
+            # response = redirect('/home')
+            # session['UID'] = user.UID
+            # return response
+            flash('Registration successful! Please log in.', 'success')  # Flash a success message
+            return render_template('login.html', )
         else:
             return render_template('login.html', errors=form.errors)
+
 
 @blue.route('/home')
 def home():  # put application's code here
     return render_template('home.html')
 
+
 @blue.route('/admin_home')
 def admin_home():  # put application's code here
     return render_template('admin_home.html')
+
 
 @blue.route('/interviewer_home')
 def interviewer_home():  # put application's code here
     return render_template('interviewer_home.html')
 
-
-# Define a route for testing purposes
-
-@blue.route('/video')
-def video():  # put application's code here
-    return render_template('video.html')
 
 @blue.route('/get-positions')
 def get_positions():
@@ -93,15 +88,17 @@ def get_positions():
     positions_data = [{'PID': position.PID, 'positionName': position.positionName} for position in positions]
     return jsonify(positions_data)
 
+
 @blue.route('/get-available-times')
 def get_available_times():
     available_times = MeetingRoom.query.filter(MeetingRoom.status == 0).all()
-    times_data = [{'MID': time.MID, 'startTime': time.startTime.strftime("%Y-%m-%d %H:%M"), 'endTime': time.endTime.strftime("%Y-%m-%d %H:%M")} for time in available_times]
+    times_data = [{'MID': time.MID, 'startTime': time.startTime.strftime("%Y-%m-%d %H:%M"),
+                   'endTime': time.endTime.strftime("%Y-%m-%d %H:%M")} for time in available_times]
     return jsonify(times_data)
 
-@blue.route('/submit-application', methods=['GET','POST'])
-def submit_application():
 
+@blue.route('/submit-application', methods=['GET', 'POST'])
+def submit_application():
     try:
         if request.method == 'POST':
             data = request.json
@@ -122,6 +119,7 @@ def submit_application():
             return jsonify({'message': 'Application submitted successfully'}), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
 
 @blue.route('/view-applications')
 def view_applications():
@@ -149,6 +147,7 @@ def view_applications():
 
     return jsonify(applications_data)
 
+
 @blue.route('/view-interview-results', methods=['GET'])
 def view_interview_results():
     current_user_id = session.get('UID')  # Assuming the user's ID is stored in the session
@@ -163,10 +162,10 @@ def view_interview_results():
             Position.positionName,
             MeetingRoom.startTime,
             MeetingRoom.endTime
-        ).join(Application, InterviewResult.AID == Application.AID)\
-         .join(Position, Position.PID == Application.PID)\
-         .join(MeetingRoom, MeetingRoom.MID == Application.MID)\
-         .filter(Application.UID == current_user_id).all()
+        ).join(Application, InterviewResult.AID == Application.AID) \
+            .join(Position, Position.PID == Application.PID) \
+            .join(MeetingRoom, MeetingRoom.MID == Application.MID) \
+            .filter(Application.UID == current_user_id).all()
 
         # Preparing the final results
         formatted_results = [{
@@ -178,7 +177,3 @@ def view_interview_results():
         return jsonify(formatted_results)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-
-
-
-

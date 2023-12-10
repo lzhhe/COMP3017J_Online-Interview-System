@@ -40,12 +40,24 @@
             }, 500);
 
         }
+
+
     </script>
 </head>
 
 <body>
 
     <div class="cotn_principal">
+{#        <!-- Flash Messages Section -->#}
+{#        {% with messages = get_flashed_messages(with_categories=true) %}#}
+{#            {% if messages %}#}
+{#                {% for category, message in messages %}#}
+{#                    <div class="alert alert-{{ category }}">#}
+{#                        {{ message }}#}
+{#                    </div>#}
+{#                {% endfor %}#}
+{#            {% endif %}#}
+{#        {% endwith %}#}
         <h1>Welcome to the online interview system!</h1>
         <div class="cont_centrar">
 

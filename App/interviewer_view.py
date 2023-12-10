@@ -22,3 +22,5 @@ def get_meeting_rooms():
     } for room in meeting_rooms]
 
     return jsonify(meeting_rooms_data)
+
+

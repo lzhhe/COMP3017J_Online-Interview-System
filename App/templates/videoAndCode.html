@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/ace.js" type="text/javascript"
+            charset="utf-8"></script>
+    <title>Video Test & Interactive Whiteboard</title>
+    <link rel="stylesheet" href="../static/videoChat.css"/>
+</head>
+<body>
+
+<select id="languageSelector">
+    <option value="python">Python</option>
+    <option value="java">Java</option>
+
+</select>
+
+<body style="display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0;">
+<div id="editor" style="height: 70%; width: 70%;">print("Hello, World!")</div>
+</body>
+<button id="runCode">Run Code</button>
+
+<div id="output"></div>
+
+<div id="container">
+    <video id="video" width="480" height="360" autoplay></video>
+    <div id="whiteboard-container">
+        <canvas id="whiteboard" width="480" height="360"></canvas>
+
+        <div class="tools">
+            <div>
+                <label for="colorPicker">选择颜色：</label>
+                <input type="color" id="colorPicker" value="#000000">
+            </div>
+
+            <div>
+                <label for="brushSize">画笔粗细：</label>
+                <input type="range" id="brushSize" min="1" max="50" value="5">
+                <span id="brushSizeDisplay">5</span>px
+            </div>
+
+            <button id="eraser">清除画布</button>
+        </div>
+    </div>
+</div>
+
+
+<script>
+
+    document.getElementById('runCode').addEventListener('click', function () {
+        var userCode = editor.getValue();
+        var selectedLanguage = document.getElementById('languageSelector').value;
+
+        fetch('/vac/execute_code', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({code: userCode, language: selectedLanguage}),
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.output) {
+                    document.getElementById('output').textContent = '输出: ' + data.output;
+                } else if (data.error) {
+                    document.getElementById('output').textContent = '错误: ' + data.error;
+                }
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
+    });
+
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const constraints = {video: true, audio: true};
+        const video = document.getElementById('video');
+        let audioContext, analyser, dataArray;
+
+        function handleSuccess(stream) {
+            video.srcObject = stream;
+
+            audioContext = new AudioContext();
+            const audioSource = audioContext.createMediaStreamSource(stream);
+            analyser = audioContext.createAnalyser();
+            audioSource.connect(analyser);
+            dataArray = new Uint8Array(analyser.frequencyBinCount);
+
+            updateVolume();
+        }
+
+        function handleError(error) {
+            console.error('getUserMedia error: ', error);
+        }
+
+        navigator.mediaDevices.getUserMedia(constraints).then(handleSuccess).catch(handleError);
+
+        function updateVolume() {
+            analyser.getByteFrequencyData(dataArray);
+            let sum = dataArray.reduce((a, b) => a + b, 0);
+            let volume = sum / dataArray.length;
+            document.getElementById('volumeDisplay').textContent = 'Volume: ' + volume.toFixed(2);
+            requestAnimationFrame(updateVolume);
+        }
+
+        const canvas = document.getElementById('whiteboard');
+        const ctx = canvas.getContext('2d');
+        let drawing = false;
+
+        canvas.addEventListener('mousedown', () => {
+            drawing = true;
+        });
+
+        canvas.addEventListener('mouseup', () => {
+            drawing = false;
+            ctx.beginPath();
+        });
+
+        canvas.addEventListener('mousemove', draw);
+
+        function draw(event) {
+            if (!drawing) return;
+            ctx.lineWidth = document.getElementById('brushSize').value;
+            ctx.lineCap = 'round';
+            let rect = canvas.getBoundingClientRect();
+            ctx.lineTo(event.clientX - rect.left, event.clientY - rect.top);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(event.clientX - rect.left, event.clientY - rect.top);
+        }
+
+        document.getElementById('colorPicker').addEventListener('change', (event) => {
+            ctx.strokeStyle = event.target.value;
+        });
+
+        document.getElementById('brushSize').addEventListener('input', (event) => {
+            document.getElementById('brushSizeDisplay').textContent = event.target.value;
+        });
+
+        document.getElementById('eraser').addEventListener('click', clearCanvas);
+
+        function clearCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+    });
+
+
+    var editor = ace.edit("editor");
+    editor.setTheme("ace/theme/monokai");
+    editor.session.setMode("ace/mode/python");
+
+    document.getElementById('languageSelector').addEventListener('change', function () {
+        var language = this.value;
+        editor.session.setMode("ace/mode/" + language);
+    });
+
+    document.getElementById('runCode').addEventListener('click', function () {
+        var userCode = editor.getValue();
+        var selectedLanguage = document.getElementById('languageSelector').value;
+
+        fetch('/runCode', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({code: userCode, language: selectedLanguage}),
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.output) {
+                    document.getElementById('output').textContent = '输出: ' + data.output;
+                } else if (data.error) {
+                    document.getElementById('output').textContent = '错误: ' + data.error;
+                }
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
+    });
+</script>
+
+
+</body>
+</html>
+
+

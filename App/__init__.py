@@ -1,6 +1,6 @@
 from flask import Flask
 
-from . import admin_view, interviewer_view
+from . import admin_view, interviewer_view, videoAndCode
 from .views import blue
 
 from .extents import init_exts
@@ -18,6 +18,7 @@ def create_app():
     app.register_blueprint(blueprint=blue)
     app.register_blueprint(admin_view.admin, url_prefix='/admin')
     app.register_blueprint(interviewer_view.interviewer, url_prefix='/interviewer')
+    app.register_blueprint(videoAndCode.vac, url_prefix='/vac')
 
     app.config['SECRET_KEY'] = 'COMP3017J'
 
