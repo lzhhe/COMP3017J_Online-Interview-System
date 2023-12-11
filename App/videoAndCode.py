@@ -51,7 +51,9 @@ def execute_code():
                 output = "未通过所有测试用例，请修改代码后再次尝试"
             return jsonify({'output': output})
 
-        if language == 'java':
+
+
+        elif language == 'java':
             try:
                 common_imports = (
                     'import java.util.*;\n'
@@ -62,50 +64,38 @@ def execute_code():
                     'import java.time.*;\n'
                     'import java.sql.*;\n'
                     'import java.util.stream.*;\n'
-                    # 移除了对 java.awt.* 和 java.swing.* 的引用
+                    'import java.util.Arrays;\n'
                 )
 
-                # 生成一个唯一的文件名
-                class_name = "Solution_" + uuid.uuid4().hex
+                class_name = "Main" + uuid.uuid4().hex
                 file_name = class_name + ".java"
-                test_file_name = "Main.java"
 
-                # 将用户代码和测试代码写入文件
-                modified_user_code = common_imports + user_code.replace("public class Solution",
-                                                                        "public class " + class_name)
+                modified_test_code = test_code.replace("public class Main", "public class " + class_name)
+
+                # 合并代码
+                full_code = common_imports + modified_test_code + "\n" + user_code
                 with open(file_name, 'w') as file:
-                    file.write(modified_user_code)
-
-                modified_test_code = common_imports + test_code.replace("Solution()", class_name + "()").replace(
-                    "Solution ", class_name + " ")
-                with open(test_file_name, 'w') as file:
-                    file.write(modified_test_code)
-                # 编译 Java 程序
-                compile_result = subprocess.run(['javac', file_name, test_file_name], capture_output=True, text=True)
-
+                    file.write(full_code)
+                print(full_code)
+                # 编译和运行 Java 程序
+                compile_result = subprocess.run(['javac', file_name], capture_output=True, text=True)
                 if compile_result.returncode != 0:
                     return jsonify({'error': compile_result.stderr})
-
-                # 运行 Java 程序
-
-                run_result = subprocess.run(['java', 'Main'], capture_output=True, text=True)
-
+                run_result = subprocess.run(['java', '-ea', class_name], capture_output=True, text=True)
                 if run_result.returncode == 0:
-                    output = "未通过所有测试用例，请修改代码后再次尝试"
+                    output = "通过所有测试用例"
                 else:
-                    output = run_result.stderr
+                    output = "未通过所有测试用例，请修改代码后再次尝试"
                 return jsonify({'output': output})
-
             finally:
                 # 清理生成的文件
                 if os.path.exists(file_name):
                     os.remove(file_name)
-                if os.path.exists(class_name + ".class"):
-                    os.remove(class_name + ".class")
-                if os.path.exists(test_file_name):
-                    os.remove(test_file_name)
-                if os.path.exists("Main.class"):
-                    os.remove("Main.class")
+                if os.path.exists(file_name.replace('.java', '.class')):
+                    os.remove(file_name.replace('.java', '.class'))
+                if os.path.exists("Solution.class"):
+                    os.remove("Solution.class")
+                    # print("Solution.class" + "已被成功删除。")
 
         else:
             return jsonify({'error': 'Unsupported language'})
