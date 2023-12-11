@@ -43,10 +43,8 @@ def execute_code():
         if language == 'python':
             result = subprocess.run(['python', '-c', full_code], capture_output=True, text=True)
             if result.returncode == 0:
-                # 执行成功，表示通过所有测试用例
                 output = "通过所有测试用例"
             else:
-                # 执行失败，返回错误信息
                 # output = result.stderr
                 output = "未通过所有测试用例，请修改代码后再次尝试"
             return jsonify({'output': output})
@@ -126,3 +124,17 @@ def get_problem_title():
         return jsonify({'title': title})
     else:
         return jsonify({'title': None})
+
+
+@vac.route('/get_problem_description', methods=['POST'])
+def get_problem_description():
+    data = request.get_json()
+    language = data.get('language')
+    proID = data.get('proID')
+
+    problem = Problem.query.filter_by(ProID=proID).first()
+    if problem:
+        description = problem.pythonDescription if language == 'python' else problem.javaDescription
+        return jsonify({'description': description})
+    else:
+        return jsonify({'description': None})

@@ -16,6 +16,7 @@
 
 </select>
 <select id="problemSelector"></select>
+<div id="problemDescription"></div>
 
 <body style="display: flex; justify-content: center; align-items: center; margin: 0;">
 <div id="editor" style="height: 500px; width: 700px;">print("Welcome to the expanded view!")</div>
@@ -60,8 +61,7 @@
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({language: selectedLanguage, proID: selectedProblemId}),
-        })
-            .then(response => response.json())
+        }).then(response => response.json())
             .then(data => {
                 editor.setValue(data.title || '没有找到题目标题');
             })
@@ -69,6 +69,25 @@
                 console.error('Error:', error);
                 editor.setValue('发生错误，无法加载题目标题');
             });
+
+        fetch('/vac/get_problem_description', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({language: selectedLanguage, proID: selectedProblemId}),
+        })
+
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('problemDescription').textContent = data.description || '没有找到题目描述';
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('problemDescription').textContent = '发生错误，无法加载题目描述';
+            });
+
+
     }
 
     // 监听语言和题目选择器的变化
