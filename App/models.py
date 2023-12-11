@@ -47,6 +47,8 @@ class Problem(db.Model):
     __tablename__ = 'problem'
     ProID = db.Column(db.Integer, primary_key=True, autoincrement=True)
 
+    problemDescription = db.Column(db.Text, nullable=False)
+
     pythonDescription = db.Column(db.Text, nullable=False)
     javaDescription = db.Column(db.Text, nullable=False)
 

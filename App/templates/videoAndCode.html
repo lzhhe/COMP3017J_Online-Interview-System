@@ -15,10 +15,12 @@
     <option value="java">Java</option>
 
 </select>
+<select id="problemSelector"></select>
 
-<body style="display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0;">
-<div id="editor" style="height: 70%; width: 70%;">print("Hello, World!")</div>
+<body style="display: flex; justify-content: center; align-items: center; margin: 0;">
+<div id="editor" style="height: 500px; width: 700px;">print("Welcome to the expanded view!")</div>
 </body>
+
 <button id="runCode">Run Code</button>
 
 <div id="output"></div>
@@ -48,11 +50,59 @@
 
 <script>
 
+    function updateEditorContent() {
+        const selectedLanguage = document.getElementById('languageSelector').value;
+        const selectedProblemId = document.getElementById('problemSelector').value;
+
+        fetch('/vac/get_problem_title', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({language: selectedLanguage, proID: selectedProblemId}),
+        })
+            .then(response => response.json())
+            .then(data => {
+                editor.setValue(data.title || '没有找到题目标题');
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                editor.setValue('发生错误，无法加载题目标题');
+            });
+    }
+
+    // 监听语言和题目选择器的变化
+    document.getElementById('languageSelector').addEventListener('change', updateEditorContent);
+    document.getElementById('problemSelector').addEventListener('change', updateEditorContent);
+
 
     document.addEventListener('DOMContentLoaded', function () {
         const constraints = {video: true, audio: true};
         const video = document.getElementById('video');
         let audioContext, analyser, dataArray;
+
+
+        let optionValue = 1;//选择的题号
+
+        fetch('/vac/get_problems')
+            .then(response => response.json())
+            .then(data => {
+                const selectElement = document.getElementById('problemSelector');
+                data.forEach(problem => {
+                    const option = document.createElement('option');
+                    optionValue = problem.ProID;
+                    option.textContent = problem.ProID + ": " + problem.Description; // 或者使用 problem.javaTitle
+                    selectElement.appendChild(option);
+                });
+            })
+            .catch(error => console.error('Error:', error));
+
+        let selectedProblemId;
+        document.getElementById('problemSelector').addEventListener('change', function () {
+            selectedProblemId = this.value;
+            console.log("Selected Problem ID: ", selectedProblemId); // 用于调试
+        });
+
 
         function handleSuccess(stream) {
             video.srcObject = stream;
@@ -134,13 +184,18 @@
     document.getElementById('runCode').addEventListener('click', function () {
         var userCode = editor.getValue();
         var selectedLanguage = document.getElementById('languageSelector').value;
+        var selectedProblemId = document.getElementById('problemSelector').value; // 获取当前选中的题目编号
 
         fetch('/vac/execute_code', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({code: userCode, language: selectedLanguage}),
+            body: JSON.stringify({
+                code: userCode,
+                language: selectedLanguage,
+                proID: selectedProblemId // 将题目编号包含在请求体中
+            }),
         })
             .then(response => response.json())
             .then(data => {
@@ -152,12 +207,12 @@
             })
             .catch((error) => {
                 console.error('Error:', error);
+                document.getElementById('output').textContent = '发生错误：' + error;
             });
     });
+
 </script>
 
 
 </body>
 </html>
-
-
