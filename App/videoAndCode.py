@@ -65,3 +65,22 @@ def execute_code():
 
     except Exception as e:
         return jsonify({'error': str(e)})
+
+# @vac.route('/get_problem_title', methods=['POST'])
+# def get_problem_title():
+#     data = request.get_json()
+#     problem_id = data['problem_id']
+#     language = data['language']
+#
+#     problem = Problem.query.filter_by(ProID=problem_id).first()
+#     if not problem:
+#         return jsonify({'error': 'Problem not found'})
+#
+#     if language == 'python':
+#         title = problem.pythonTitle
+#     elif language == 'java':
+#         title = problem.javaTitle
+#     else:
+#         return jsonify({'error': 'Unsupported language'})
+#
+#     return jsonify({'title': title})

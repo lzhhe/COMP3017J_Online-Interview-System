@@ -48,30 +48,6 @@
 
 <script>
 
-    document.getElementById('runCode').addEventListener('click', function () {
-        var userCode = editor.getValue();
-        var selectedLanguage = document.getElementById('languageSelector').value;
-
-        fetch('/vac/execute_code', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({code: userCode, language: selectedLanguage}),
-        })
-            .then(response => response.json())
-            .then(data => {
-                if (data.output) {
-                    document.getElementById('output').textContent = '输出: ' + data.output;
-                } else if (data.error) {
-                    document.getElementById('output').textContent = '错误: ' + data.error;
-                }
-            })
-            .catch((error) => {
-                console.error('Error:', error);
-            });
-    });
-
 
     document.addEventListener('DOMContentLoaded', function () {
         const constraints = {video: true, audio: true};
@@ -159,7 +135,7 @@
         var userCode = editor.getValue();
         var selectedLanguage = document.getElementById('languageSelector').value;
 
-        fetch('/runCode', {
+        fetch('/vac/execute_code', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

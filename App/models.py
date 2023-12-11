@@ -43,3 +43,19 @@ class Application(db.Model):
     status = db.Column(db.Integer, nullable=False, default=0)  # 0 reject 1 accept
 
 
+class Problem(db.Model):
+    __tablename__ = 'problem'
+    ProID = db.Column(db.Integer, primary_key=True, autoincrement=True)
+
+    pythonDescription = db.Column(db.Text, nullable=False)
+    javaDescription = db.Column(db.Text, nullable=False)
+
+    pythonTitle = db.Column(db.Text, nullable=False)
+    javaTitle = db.Column(db.Text, nullable=False)
+
+    pythonSolution = db.Column(db.Text, nullable=False)
+    javaSolution = db.Column(db.Text, nullable=False)
+
+    pythonTestCode = db.Column(db.Text, nullable=False)
+    javaTestCode = db.Column(db.Text, nullable=False)
+
