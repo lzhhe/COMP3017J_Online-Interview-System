@@ -95,7 +95,8 @@
     document.getElementById('problemSelector').addEventListener('change', updateEditorContent);
 
 
-    document.addEventListener('DOMContentLoaded', function () {
+    document.addEventListener('DOMContentLoaded', async () => {
+        await getMedia();
         const constraints = {video: true, audio: true};
         const video = document.getElementById('video');
         let audioContext, analyser, dataArray;
@@ -229,6 +230,70 @@
                 document.getElementById('output').textContent = '发生错误：' + error;
             });
     });
+
+
+    // WebRTC 相关代码
+    const peerConnections = {}; // 用于存储所有的Peer连接
+    const config = {'iceServers': [{'urls': 'stun:stun.l.google.com:19302'}]};
+
+    // 创建 WebSocket 连接
+    const signaling = new WebSocket('ws://localhost:8080');
+
+    // 当 WebSocket 连接打开时
+    signaling.onopen = () => console.log('Connected to signaling server');
+
+    // 处理来自信令服务器的消息
+    signaling.onmessage = async message => {
+        const data = JSON.parse(message.data);
+        const peerConnection = peerConnections[data.sender] || createPeerConnection(data.sender);
+
+        if (data.offer) {
+            await peerConnection.setRemoteDescription(new RTCSessionDescription(data.offer));
+            const answer = await peerConnection.createAnswer();
+            await peerConnection.setLocalDescription(answer);
+            signaling.send(JSON.stringify({'answer': answer, 'receiver': data.sender}));
+        } else if (data.answer) {
+            await peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
+        } else if (data.ice) {
+            await peerConnection.addIceCandidate(new RTCIceCandidate(data.ice));
+        }
+    };
+
+    // 创建 WebRTC 连接
+    function createPeerConnection(sender) {
+        const peerConnection = new RTCPeerConnection(config);
+
+        // 添加本地流到连接
+        const stream = document.getElementById('video').srcObject;
+        stream.getTracks().forEach(track => peerConnection.addTrack(track, stream));
+
+        // 处理远程流
+        peerConnection.ontrack = event => {
+            const remoteVideo = document.createElement('video');
+            remoteVideo.srcObject = event.streams[0];
+            remoteVideo.autoplay = true;
+            remoteVideo.muted = true;
+            document.body.appendChild(remoteVideo); // 或添加到特定元素
+        };
+
+        // 处理 ICE 候选
+        peerConnection.onicecandidate = event => {
+            if (event.candidate) {
+                signaling.send(JSON.stringify({'ice': event.candidate, 'receiver': sender}));
+            }
+        };
+
+        peerConnections[sender] = peerConnection;
+        return peerConnection;
+    }
+
+    // 获取本地媒体流
+    async function getMedia() {
+        const constraints = {video: true, audio: true};
+        const stream = await navigator.mediaDevices.getUserMedia(constraints);
+        document.getElementById('video').srcObject = stream;
+    }
+
 
 </script>
 

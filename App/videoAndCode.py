@@ -19,6 +19,11 @@ def video_and_code():
     return render_template('videoAndCode.html')
 
 
+@vac.route('/candidate.html', methods=['GET', 'POST'])
+def receive():
+    return render_template('candidate.html')
+
+
 @vac.route('/execute_code', methods=['POST'])
 def execute_code():
     data = request.get_json()

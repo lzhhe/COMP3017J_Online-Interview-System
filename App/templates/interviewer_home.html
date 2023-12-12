@@ -40,7 +40,7 @@
                             colorBar.classList.add('meeting-room-status');
 
                             // 添加点击事件处理器
-                            colorBar.addEventListener('click', function() {
+                            colorBar.addEventListener('click', function () {
                                 console.log("Color bar clicked. Navigating to /videoAndCode.html");
                                 window.location.href = '/videoAndCode.html'; // 修改为正确的 URL
                             });
@@ -65,7 +65,6 @@
         }
 
 
-
         $(document).ready(function () {
             updateCalendarWithMeetingRooms();
         });
@@ -78,10 +77,16 @@
 
 {% endblock %}
 {% block content %}
-<div><button id="goToVideoAndCode">Go to Video and Code</button></div>
-<script>
-    document.getElementById("goToVideoAndCode").addEventListener("click", function() {
-    window.location.href = '/vac/videoAndCode.html'; // 修改为正确的 URL
-});
-</script>
+    <div>
+        <button id="goToVideoAndCode">Go to Video and Code</button>
+        <button id="goToReceive">Go to receive</button>
+    </div>
+    <script>
+        document.getElementById("goToVideoAndCode").addEventListener("click", function () {
+            window.location.href = '/vac/videoAndCode.html'; // 修改为正确的 URL
+        });
+        document.getElementById("goToReceive").addEventListener("click", function () {
+            window.location.href = '/vac/candidate.html'; // 修改为正确的 URL
+        });
+    </script>
 {% endblock %}
