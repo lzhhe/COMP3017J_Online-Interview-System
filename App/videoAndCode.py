@@ -1,21 +1,15 @@
 import os
-import re
 import subprocess
-import json
+import time
 import uuid
-from datetime import datetime
 
-import requests
 from agora_token_builder import RtcTokenBuilder
 from agora_token_builder.RtcTokenBuilder import Role_Publisher
-from flask import Blueprint, request, redirect, flash, url_for, render_template, session, jsonify
+from flask import Blueprint, request, render_template, jsonify
+from flask_socketio import emit
 
-from App.forms import RegisterForm, LoginForm
+from .socket_config import socketio
 from App.models import *
-from werkzeug.security import generate_password_hash, check_password_hash
-
-import agora_token_builder
-import time
 
 vac = Blueprint('vac', __name__)
 
@@ -172,18 +166,9 @@ def get_token():
     return jsonify({'token': token})
 
 
-editor_content = ""
-
-@vac.route('/receive_data', methods=['POST'])
-def receive_data():
-    global editor_content
-    data = request.json
-    editor_content = data['content']
-    return jsonify({"status": "success"})
-
-@vac.route('/get_editor_content', methods=['GET'])
-def get_editor_content():
-    return editor_content
+@socketio.on('update_editor_content')
+def handle_editor_update(data):
+    emit('editor_content_updated', data, broadcast=True, include_self=True)
 
 
 # @vac.route('/getFastboardRoom', methods=['GET'])

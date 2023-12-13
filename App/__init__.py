@@ -1,10 +1,13 @@
 from flask import Flask
 from flask_cors import CORS
+from flask_socketio import SocketIO
 
 from . import admin_view, interviewer_view, videoAndCode
 from .views import blue
 
 from .extents import init_exts
+
+from .socket_config import socketio
 
 HOSTNAME = "127.0.0.1"
 PORT = 3306
@@ -12,6 +15,7 @@ USERNAME = "root"
 # PASSWORD = "2003721gavin?"
 PASSWORD = "131a2abLZH"
 FLASK_DB = "online_interview_system"
+
 
 
 def create_app():
@@ -29,7 +33,13 @@ def create_app():
 
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
+    socketio = SocketIO(app, cors_allowed_origins="*")
+    socketio.init_app(app)
+
     init_exts(app)
+
+    # 绑定 Flask 应用到 SocketIO
+    socketio.init_app(app)
 
     return app
 
