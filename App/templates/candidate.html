@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Simple Video Call</title>
     <script src="https://download.agora.io/sdk/release/AgoraRTC_N-4.20.0.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/ace.js" type="text/javascript"
+            charset="utf-8"></script>
+
     <style>
         #local-video, #remote-video {
             width: 480px;
@@ -14,78 +17,120 @@
     </style>
 </head>
 <body>
-    <h2>Simple Video Call</h2>
+<h2>Simple Video Call</h2>
+<div>
+    <h3>local</h3>
+    <div id="local-video"></div>
+    <h3>remote</h3>
+    <div id="remote-video"></div>
+
     <div>
-        <h3>local</h3>
-        <div id="local-video"></div>
-        <h3>remote</h3>
-        <div id="remote-video"></div>
+        <h3>Code Editor</h3>
+        <div id="editor" style="width: 600px; height: 400px;"></div>
     </div>
 
-    <script>
-        var client = AgoraRTC.createClient({mode: "rtc", codec: "vp8"});
-        var localTracks = [];
-        var isJoiningChannel = false;
-        var isChannelJoined = false;
 
-        async function joinChannel(token, channelName, uid) {
-            if (isJoiningChannel || isChannelJoined) {
-                console.log("Joining process is ongoing or already connected to the channel.");
-                return;
-            }
-            isJoiningChannel = true;
-            try {
-                await client.join("b5a04df0256a451ebec8ee8774ef85ff", channelName, token, uid);
-                localTracks = await AgoraRTC.createMicrophoneAndCameraTracks();
-                localTracks[1].play("local-video");
-                await client.publish(localTracks);
-                console.log("Publish local streams successfully");
-                isChannelJoined = true;
-            } catch (error) {
-                console.error('Error joining the channel:', error);
-            } finally {
-                isJoiningChannel = false;
-            }
+</div>
+
+<script>
+    var client = AgoraRTC.createClient({mode: "rtc", codec: "vp8"});
+    var localTracks = [];
+    var isJoiningChannel = false;
+    var isChannelJoined = false;
+
+    // 初始化 Ace Editor
+    var editor = ace.edit("editor");
+    editor.setTheme("ace/theme/monokai");
+    editor.session.setMode("ace/mode/javascript");
+
+    editor.getSession().on('change', function (delta) {
+        // 获取编辑器当前的内容
+        var editorContent = editor.getSession().getValue();
+
+        // 发送数据到服务器
+        fetch('http://localhost:5000/vac/receive_data', { // 确保端口和域名与你的服务器相匹配
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({content: editorContent})
+        })
+            .then(response => response.json())
+            .then(data => console.log("Data sent successfully"))
+            .catch(error => console.error('Error sending editor data:', error));
+    });
+
+
+    function updateEditorFromServer() {
+        fetch('http://localhost:5000/vac/get_editor_content')
+            .then(response => response.text())
+            .then(data => {
+                editor.session.setValue(data);
+            })
+            .catch(error => console.error('Error fetching editor data:', error));
+    }
+
+    setInterval(updateEditorFromServer, 1000);
+
+
+    async function joinChannel(token, channelName, uid) {
+        if (isJoiningChannel || isChannelJoined) {
+            console.log("Joining process is ongoing or already connected to the channel.");
+            return;
         }
-
-        client.on("user-published", async (user, mediaType) => {
-            await client.subscribe(user, mediaType);
-            console.log("subscribe success");
-            if (mediaType === "video") {
-                user.videoTrack.play("remote-video");
-            }
-            if (mediaType === "audio") {
-                user.audioTrack.play();
-            }
-        });
-
-        client.on("user-unpublished", user => {
-            console.log("unpublished user", user);
-            // 可以在这里处理用户停止发布的逻辑
-        });
-
-        async function leaveChannel() {
-            for (let track of localTracks) {
-                track.stop();
-                track.close();
-            }
-            await client.leave();
-            isChannelJoined = false;
-            console.log("Client leaves channel");
+        isJoiningChannel = true;
+        try {
+            await client.join("b5a04df0256a451ebec8ee8774ef85ff", channelName, token, uid);
+            localTracks = await AgoraRTC.createMicrophoneAndCameraTracks();
+            localTracks[1].play("local-video");
+            await client.publish(localTracks);
+            console.log("Publish local streams successfully");
+            isChannelJoined = true;
+        } catch (error) {
+            console.error('Error joining the channel:', error);
+        } finally {
+            isJoiningChannel = false;
         }
+    }
 
-        function getTokenAndJoinChannel(channelName, uid) {
-            fetch(`/vac/get_token?channelName=${channelName}&uid=${uid}`)
-                .then(response => response.json())
-                .then(data => {
-                    joinChannel(data.token, channelName, uid);
-                })
-                .catch(error => console.error('Error:', error));
+    client.on("user-published", async (user, mediaType) => {
+        await client.subscribe(user, mediaType);
+        console.log("subscribe success");
+        if (mediaType === "video") {
+            user.videoTrack.play("remote-video");
         }
+        if (mediaType === "audio") {
+            user.audioTrack.play();
+        }
+    });
 
-        var channelName = "testChannel";
-        var uid = Math.floor(Math.random() * 10000);
-        getTokenAndJoinChannel(channelName, uid);
-    </script>
+    client.on("user-unpublished", user => {
+        console.log("unpublished user", user);
+        // 可以在这里处理用户停止发布的逻辑
+    });
+
+    async function leaveChannel() {
+        for (let track of localTracks) {
+            track.stop();
+            track.close();
+        }
+        await client.leave();
+        isChannelJoined = false;
+        console.log("Client leaves channel");
+    }
+
+    function getTokenAndJoinChannel(channelName, uid) {
+        fetch(`/vac/get_token?channelName=${channelName}&uid=${uid}`)
+            .then(response => response.json())
+            .then(data => {
+                joinChannel(data.token, channelName, uid);
+            })
+            .catch(error => console.error('Error:', error));
+    }
+
+    var channelName = "testChannel";
+    var uid = Math.floor(Math.random() * 10000);
+    getTokenAndJoinChannel(channelName, uid);
+</script>
 </body>
 </html>

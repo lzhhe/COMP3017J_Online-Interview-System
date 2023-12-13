@@ -1,4 +1,5 @@
 from flask import Flask
+from flask_cors import CORS
 
 from . import admin_view, interviewer_view, videoAndCode
 from .views import blue
@@ -15,6 +16,7 @@ FLASK_DB = "online_interview_system"
 
 def create_app():
     app = Flask(__name__)
+    CORS(app)
     app.register_blueprint(blueprint=blue)
     app.register_blueprint(admin_view.admin, url_prefix='/admin')
     app.register_blueprint(interviewer_view.interviewer, url_prefix='/interviewer')

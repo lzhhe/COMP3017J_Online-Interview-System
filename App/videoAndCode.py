@@ -5,6 +5,7 @@ import json
 import uuid
 from datetime import datetime
 
+import requests
 from agora_token_builder import RtcTokenBuilder
 from agora_token_builder.RtcTokenBuilder import Role_Publisher
 from flask import Blueprint, request, redirect, flash, url_for, render_template, session, jsonify
@@ -169,3 +170,40 @@ def get_token():
     token = RtcTokenBuilder.buildTokenWithUid(app_id, app_certificate, channel_name, int(uid), Role_Publisher, privilege_expired_ts)
     print(token)
     return jsonify({'token': token})
+
+
+editor_content = ""
+
+@vac.route('/receive_data', methods=['POST'])
+def receive_data():
+    global editor_content
+    data = request.json
+    editor_content = data['content']
+    return jsonify({"status": "success"})
+
+@vac.route('/get_editor_content', methods=['GET'])
+def get_editor_content():
+    return editor_content
+
+
+# @vac.route('/getFastboardRoom', methods=['GET'])
+# def get_fastboard_room():
+#     app_identifier = "3MKPgJlsEe6oBM-FcV-UgA/6hO0-eLyLEoFpA"
+#     sdk_token = "NETLESSSDK_YWs9UXRvS01odUtmOXBSa29YQyZub25jZT1lOTRmMzMyMC05OTcxLTExZWUtOGYyMS04ZDg1NDBiMjY4MjQmcm9sZT0wJnNpZz1mMGM2YTI3ZWE5NTNkZmFmMTk1MmViYTliZTI2NGU3YmY2MjQ2NWIwOTVlNWJiYzA5MDRhMjIwNzhiYTg4Nzk1"
+#
+#     # 创建房间
+#     room_response = requests.post(
+#         "https://api.netless.link/v5/rooms",
+#         headers={"token": sdk_token, "Content-Type": "application/json", "region": "cn-hz"}
+#     )
+#     room_uuid = room_response.json()["uuid"]
+#
+#     # 生成 Room Token
+#     token_response = requests.post(
+#         f"https://api.netless.link/v5/tokens/rooms/{room_uuid}",
+#         headers={"token": sdk_token, "Content-Type": "application/json", "region": "cn-hz"},
+#         json={"lifespan": 3600000, "role": "admin"}
+#     )
+#     room_token = token_response.text
+#
+#     return jsonify({"uuid": room_uuid, "token": room_token})
