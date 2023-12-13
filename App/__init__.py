@@ -9,7 +9,7 @@ from .extents import init_exts
 
 from .socket_config import socketio
 
-HOSTNAME = "127.0.0.1"
+HOSTNAME = "192.168.56.220"
 PORT = 3306
 USERNAME = "root"
 # PASSWORD = "2003721gavin?"
