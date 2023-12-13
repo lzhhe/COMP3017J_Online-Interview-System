@@ -168,7 +168,9 @@ def get_token():
 
 @socketio.on('update_editor_content')
 def handle_editor_update(data):
-    emit('editor_content_updated', data, broadcast=True, include_self=True)
+    # print("USING the update_editor_content function")
+    emit('editor_content_updated', data, broadcast=True, include_self=False)
+
 
 
 # @vac.route('/getFastboardRoom', methods=['GET'])

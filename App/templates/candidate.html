@@ -44,8 +44,6 @@
     var isChannelJoined = false;
 
 
-
-
     var socket = io.connect('http://' + document.domain + ':' + location.port);
 
     var editor = ace.edit("editor");
@@ -53,17 +51,23 @@
     editor.session.setMode("ace/mode/python");
 
     // 当编辑器内容发生改变时发送更新
+    var isUpdating = false;
+
     editor.getSession().on('change', function (delta) {
-        var editorContent = editor.getSession().getValue();
-        console.log("Sending content:", editorContent); // 打印发送的内容
-        socket.emit('update_editor_content', {content: editorContent});
+        if (!isUpdating) {
+            var editorContent = editor.getSession().getValue();
+            console.log("Sending content:", editorContent);
+            socket.emit('update_editor_content', {content: editorContent});
+        }
     });
 
     socket.on('editor_content_updated', function (data) {
-        console.log("Received content:", data.content); // 打印接收到的内容
+        console.log("Received content:", data.content);
+        isUpdating = true; // 设置更新标志
         if (editor.getSession().getValue() !== data.content) {
             editor.session.setValue(data.content);
         }
+        isUpdating = false; // 清除更新标志
     });
 
 
