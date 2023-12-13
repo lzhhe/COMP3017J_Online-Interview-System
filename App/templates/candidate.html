@@ -33,6 +33,10 @@
         <h3>Code Editor</h3>
         <div id="editor" style="width: 600px; height: 400px;"></div>
     </div>
+    <h3>problemDescription</h3>
+    <div id="problemDescription"></div>
+    <h3>output</h3>
+    <div id="output"></div>
 
 
 </div>
@@ -45,6 +49,18 @@
 
 
     var socket = io.connect('http://' + document.domain + ':' + location.port);
+
+    // 接收问题描述更新
+    socket.on('problem_description_updated', function (data) {
+        document.getElementById('problemDescription').textContent = data.description;
+        console.log("Received problem description:", data.description);
+    });
+
+    // 接收输出内容更新
+    socket.on('output_updated', function (data) {
+        document.getElementById('output').textContent = data.output;
+        console.log("Received output:", data.output);
+    });
 
     var editor = ace.edit("editor");
     editor.setTheme("ace/theme/monokai");
@@ -69,6 +85,8 @@
         }
         isUpdating = false; // 清除更新标志
     });
+
+
 
 
     async function joinChannel(token, channelName, uid) {

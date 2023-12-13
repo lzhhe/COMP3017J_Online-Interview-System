@@ -139,37 +139,6 @@
     editor.session.setMode("ace/mode/python");
 
 
-    {#async function getFasrboardTokenAndJoinChannel() {
-    fetch('/getFastboardRoom')
-        .then(response => response.json())
-        .then(data => {
-            const { uuid, token } = data;
-            // 使用 uuid 和 token 初始化 Fastboard
-            initializeFastboard(uuid, token);
-        })
-        .catch(error => console.error('Error:', error));
-}
-
-
-    // Initialize Fastboard
-    async function initializeFastboard() {
-        const app = await createFastboard({
-            sdkConfig: {
-                appIdentifier: "3MKPgJlsEe6oBM-FcV-UgA/6hO0-eLyLEoFpA", // 替换为您的 App Identifier
-                region: "cn-hz",
-            },
-            joinRoom: {
-                uid: 100, // 替换为用户 UID
-                uuid: uuid, // 替换为房间 UUID
-                roomToken: token // 替换为房间 Token
-            },
-            managerConfig: {
-                cursor: true,
-            },
-        });
-        return mount(app, document.getElementById("whiteboard-container"));
-    }#}
-
 
     document.getElementById('languageSelector').addEventListener('change', function () {
         var language = this.value;
@@ -206,6 +175,7 @@
             .then(response => response.json())
             .then(data => {
                 document.getElementById('problemDescription').textContent = data.description || '没有找到题目描述';
+                sendProblemDescription()
             })
             .catch(error => {
                 console.error('Error:', error);
@@ -242,7 +212,7 @@
                 data.forEach(problem => {
                     const option = document.createElement('option');
                     optionValue = problem.ProID;
-                    option.textContent = problem.ProID + ": " + problem.Description; // 或者使用 problem.javaTitle
+                    option.textContent = problem.ProID + ": " + problem.Description;
                     selectElement.appendChild(option);
                 });
             })
@@ -336,6 +306,7 @@
             .then(data => {
                 if (data.output) {
                     document.getElementById('output').textContent = '输出: ' + data.output;
+                    sendOutputUpdate()
                 } else if (data.error) {
                     document.getElementById('output').textContent = '错误: ' + data.error;
                 }
@@ -371,6 +342,17 @@
         isUpdating = false; // 清除更新标志
     });
 
+
+    function sendProblemDescription() {
+        var description = document.getElementById('problemDescription').textContent;
+        socket.emit('problem_description', {description: description});
+    }
+
+    // 发送输出内容
+    function sendOutputUpdate() {
+        var output = document.getElementById('output').textContent;
+        socket.emit('output_update', {output: output});
+    }
 
 </script>
 

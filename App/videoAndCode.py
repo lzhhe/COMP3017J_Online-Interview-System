@@ -171,26 +171,11 @@ def handle_editor_update(data):
     # print("USING the update_editor_content function")
     emit('editor_content_updated', data, broadcast=True, include_self=False)
 
+@socketio.on('problem_description')
+def handle_problem_description(data):
+    emit('problem_description_updated', data, broadcast=True)
 
+@socketio.on('output_update')
+def handle_output_update(data):
+    emit('output_updated', data, broadcast=True)
 
-# @vac.route('/getFastboardRoom', methods=['GET'])
-# def get_fastboard_room():
-#     app_identifier = "3MKPgJlsEe6oBM-FcV-UgA/6hO0-eLyLEoFpA"
-#     sdk_token = "NETLESSSDK_YWs9UXRvS01odUtmOXBSa29YQyZub25jZT1lOTRmMzMyMC05OTcxLTExZWUtOGYyMS04ZDg1NDBiMjY4MjQmcm9sZT0wJnNpZz1mMGM2YTI3ZWE5NTNkZmFmMTk1MmViYTliZTI2NGU3YmY2MjQ2NWIwOTVlNWJiYzA5MDRhMjIwNzhiYTg4Nzk1"
-#
-#     # 创建房间
-#     room_response = requests.post(
-#         "https://api.netless.link/v5/rooms",
-#         headers={"token": sdk_token, "Content-Type": "application/json", "region": "cn-hz"}
-#     )
-#     room_uuid = room_response.json()["uuid"]
-#
-#     # 生成 Room Token
-#     token_response = requests.post(
-#         f"https://api.netless.link/v5/tokens/rooms/{room_uuid}",
-#         headers={"token": sdk_token, "Content-Type": "application/json", "region": "cn-hz"},
-#         json={"lifespan": 3600000, "role": "admin"}
-#     )
-#     room_token = token_response.text
-#
-#     return jsonify({"uuid": room_uuid, "token": room_token})
