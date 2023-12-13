@@ -3,57 +3,89 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WebRTC Video Receiver</title>
+    <title>Simple Video Call</title>
+    <script src="https://download.agora.io/sdk/release/AgoraRTC_N-4.20.0.js"></script>
     <style>
-        video {
+        #local-video, #remote-video {
             width: 480px;
+            height: 360px;
             border: 1px solid black;
         }
     </style>
 </head>
 <body>
-    <h2>Remote Video</h2>
-    <video id="remoteVideo" autoplay></video>
+    <h2>Simple Video Call</h2>
+    <div>
+        <h3>local</h3>
+        <div id="local-video"></div>
+        <h3>remote</h3>
+        <div id="remote-video"></div>
+    </div>
 
     <script>
-        const peerConnections = {};
-        const config = { 'iceServers': [{ 'urls': 'stun:stun.l.google.com:19302' }] };
-        const signaling = new WebSocket('ws://localhost:8080');
+        var client = AgoraRTC.createClient({mode: "rtc", codec: "vp8"});
+        var localTracks = [];
+        var isJoiningChannel = false;
+        var isChannelJoined = false;
 
-        signaling.onopen = () => console.log('Connected to signaling server');
-
-        signaling.onmessage = async message => {
-            const data = JSON.parse(message.data);
-            const peerConnection = peerConnections[data.sender] || createPeerConnection(data.sender);
-
-            if (data.offer) {
-                await peerConnection.setRemoteDescription(new RTCSessionDescription(data.offer));
-                const answer = await peerConnection.createAnswer();
-                await peerConnection.setLocalDescription(answer);
-                signaling.send(JSON.stringify({ 'answer': answer, 'receiver': data.sender }));
-            } else if (data.answer) {
-                await peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
-            } else if (data.ice) {
-                await peerConnection.addIceCandidate(new RTCIceCandidate(data.ice));
+        async function joinChannel(token, channelName, uid) {
+            if (isJoiningChannel || isChannelJoined) {
+                console.log("Joining process is ongoing or already connected to the channel.");
+                return;
             }
-        };
-
-        function createPeerConnection(sender) {
-            const peerConnection = new RTCPeerConnection(config);
-
-            peerConnection.ontrack = event => {
-                document.getElementById('remoteVideo').srcObject = event.streams[0];
-            };
-
-            peerConnection.onicecandidate = event => {
-                if (event.candidate) {
-                    signaling.send(JSON.stringify({ 'ice': event.candidate, 'receiver': sender }));
-                }
-            };
-
-            peerConnections[sender] = peerConnection;
-            return peerConnection;
+            isJoiningChannel = true;
+            try {
+                await client.join("b5a04df0256a451ebec8ee8774ef85ff", channelName, token, uid);
+                localTracks = await AgoraRTC.createMicrophoneAndCameraTracks();
+                localTracks[1].play("local-video");
+                await client.publish(localTracks);
+                console.log("Publish local streams successfully");
+                isChannelJoined = true;
+            } catch (error) {
+                console.error('Error joining the channel:', error);
+            } finally {
+                isJoiningChannel = false;
+            }
         }
+
+        client.on("user-published", async (user, mediaType) => {
+            await client.subscribe(user, mediaType);
+            console.log("subscribe success");
+            if (mediaType === "video") {
+                user.videoTrack.play("remote-video");
+            }
+            if (mediaType === "audio") {
+                user.audioTrack.play();
+            }
+        });
+
+        client.on("user-unpublished", user => {
+            console.log("unpublished user", user);
+            // 可以在这里处理用户停止发布的逻辑
+        });
+
+        async function leaveChannel() {
+            for (let track of localTracks) {
+                track.stop();
+                track.close();
+            }
+            await client.leave();
+            isChannelJoined = false;
+            console.log("Client leaves channel");
+        }
+
+        function getTokenAndJoinChannel(channelName, uid) {
+            fetch(`/vac/get_token?channelName=${channelName}&uid=${uid}`)
+                .then(response => response.json())
+                .then(data => {
+                    joinChannel(data.token, channelName, uid);
+                })
+                .catch(error => console.error('Error:', error));
+        }
+
+        var channelName = "testChannel";
+        var uid = Math.floor(Math.random() * 10000);
+        getTokenAndJoinChannel(channelName, uid);
     </script>
 </body>
 </html>

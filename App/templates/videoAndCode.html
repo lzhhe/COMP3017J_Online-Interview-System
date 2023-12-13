@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/ace.js" type="text/javascript"
             charset="utf-8"></script>
+    <!-- 引入声网 SDK -->
+    <script src="https://download.agora.io/sdk/release/AgoraRTC_N-4.20.0.js"></script>
+
     <title>Video Test & Interactive Whiteboard</title>
     <link rel="stylesheet" href="../static/videoChat.css"/>
 </head>
@@ -13,21 +16,19 @@
 <select id="languageSelector">
     <option value="python">Python</option>
     <option value="java">Java</option>
-
 </select>
 <select id="problemSelector"></select>
 <div id="problemDescription"></div>
 
-<body style="display: flex; justify-content: center; align-items: center; margin: 0;">
 <div id="editor" style="height: 500px; width: 700px;">print("Welcome to the expanded view!")</div>
-</body>
 
 <button id="runCode">Run Code</button>
-
 <div id="output"></div>
 
 <div id="container">
     <video id="video" width="480" height="360" autoplay></video>
+    <div id="remote-container"></div>
+
     <div id="whiteboard-container">
         <canvas id="whiteboard" width="480" height="360"></canvas>
 
@@ -36,20 +37,116 @@
                 <label for="colorPicker">选择颜色：</label>
                 <input type="color" id="colorPicker" value="#000000">
             </div>
-
             <div>
                 <label for="brushSize">画笔粗细：</label>
                 <input type="range" id="brushSize" min="1" max="50" value="5">
                 <span id="brushSizeDisplay">5</span>px
             </div>
-
             <button id="eraser">清除画布</button>
         </div>
     </div>
 </div>
 
-
 <script>
+
+    // Initialize AgoraRTC client
+    var client = AgoraRTC.createClient({mode: "rtc", codec: "vp8"});
+    var localTracks = [];
+
+    var isJoiningChannel = false;
+    var isChannelJoined = false;
+
+    async function joinChannel(token, channelName, uid) {
+        if (isJoiningChannel || isChannelJoined) {
+            console.log("Joining process is ongoing or already connected to the channel.");
+            return;
+        }
+
+        isJoiningChannel = true;
+
+        try {
+            await client.join("b5a04df0256a451ebec8ee8774ef85ff", channelName, token, uid);
+            localTracks = await AgoraRTC.createMicrophoneAndCameraTracks();
+            localTracks[1].play("video");
+            await client.publish(localTracks);
+            console.log("Publish local streams successfully");
+            isChannelJoined = true;
+        } catch (error) {
+            console.error('Error joining the channel:', error);
+            // Handle error appropriately
+        } finally {
+            isJoiningChannel = false;
+        }
+    }
+
+    // Subscribe to remote user
+    client.on("user-published", async (user, mediaType) => {
+        await client.subscribe(user, mediaType);
+        console.log("subscribe success");
+
+        if (mediaType === "video") {
+            user.videoTrack.play("remote-container");
+        }
+        if (mediaType === "audio") {
+            user.audioTrack.play();
+        }
+    });
+
+    client.on("user-unpublished", user => {
+        // Handle user unpublish logic
+        console.log("unpublished user", user);
+    });
+
+    // Leave and clean up
+    async function leaveChannel() {
+        for (let track of localTracks) {
+            isChannelJoined = false;
+            console.log("Client leaves channel");
+            track.stop();
+            track.close();
+        }
+        await client.leave();
+        console.log("Client leaves channel");
+    }
+
+    // Get token and join channel
+    function getTokenAndJoinChannel(channelName, uid) {
+        fetch(`/vac/get_token?channelName=${channelName}&uid=${uid}`)
+            .then(response => response.json())
+            .then(data => {
+                joinChannel(data.token, channelName, uid);
+            })
+            .catch(error => console.error('Error:', error));
+    }
+
+    // Example usage
+    var channelName = "testChannel";
+    var uid = Math.floor(Math.random() * 10000);
+    getTokenAndJoinChannel(channelName, uid);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    var editor = ace.edit("editor");
+    editor.setTheme("ace/theme/monokai");
+    editor.session.setMode("ace/mode/python");
+
+    document.getElementById('languageSelector').addEventListener('change', function () {
+        var language = this.value;
+        editor.session.setMode("ace/mode/" + language);
+    });
 
     function updateEditorContent() {
         const selectedLanguage = document.getElementById('languageSelector').value;
@@ -95,8 +192,12 @@
     document.getElementById('problemSelector').addEventListener('change', updateEditorContent);
 
 
-    document.addEventListener('DOMContentLoaded', async () => {
-        await getMedia();
+    document.addEventListener('DOMContentLoaded', function () {
+
+        var uid = Math.floor(Math.random() * 10000);
+        getTokenAndJoinChannel(channelName, uid);
+
+
         const constraints = {video: true, audio: true};
         const video = document.getElementById('video');
         let audioContext, analyser, dataArray;
@@ -133,7 +234,7 @@
             audioSource.connect(analyser);
             dataArray = new Uint8Array(analyser.frequencyBinCount);
 
-            updateVolume();
+
         }
 
         function handleError(error) {
@@ -142,13 +243,6 @@
 
         navigator.mediaDevices.getUserMedia(constraints).then(handleSuccess).catch(handleError);
 
-        function updateVolume() {
-            analyser.getByteFrequencyData(dataArray);
-            let sum = dataArray.reduce((a, b) => a + b, 0);
-            let volume = sum / dataArray.length;
-            document.getElementById('volumeDisplay').textContent = 'Volume: ' + volume.toFixed(2);
-            requestAnimationFrame(updateVolume);
-        }
 
         const canvas = document.getElementById('whiteboard');
         const ctx = canvas.getContext('2d');
@@ -192,15 +286,6 @@
     });
 
 
-    var editor = ace.edit("editor");
-    editor.setTheme("ace/theme/monokai");
-    editor.session.setMode("ace/mode/python");
-
-    document.getElementById('languageSelector').addEventListener('change', function () {
-        var language = this.value;
-        editor.session.setMode("ace/mode/" + language);
-    });
-
     document.getElementById('runCode').addEventListener('click', function () {
         var userCode = editor.getValue();
         var selectedLanguage = document.getElementById('languageSelector').value;
@@ -230,69 +315,6 @@
                 document.getElementById('output').textContent = '发生错误：' + error;
             });
     });
-
-
-    // WebRTC 相关代码
-    const peerConnections = {}; // 用于存储所有的Peer连接
-    const config = {'iceServers': [{'urls': 'stun:stun.l.google.com:19302'}]};
-
-    // 创建 WebSocket 连接
-    const signaling = new WebSocket('ws://localhost:8080');
-
-    // 当 WebSocket 连接打开时
-    signaling.onopen = () => console.log('Connected to signaling server');
-
-    // 处理来自信令服务器的消息
-    signaling.onmessage = async message => {
-        const data = JSON.parse(message.data);
-        const peerConnection = peerConnections[data.sender] || createPeerConnection(data.sender);
-
-        if (data.offer) {
-            await peerConnection.setRemoteDescription(new RTCSessionDescription(data.offer));
-            const answer = await peerConnection.createAnswer();
-            await peerConnection.setLocalDescription(answer);
-            signaling.send(JSON.stringify({'answer': answer, 'receiver': data.sender}));
-        } else if (data.answer) {
-            await peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
-        } else if (data.ice) {
-            await peerConnection.addIceCandidate(new RTCIceCandidate(data.ice));
-        }
-    };
-
-    // 创建 WebRTC 连接
-    function createPeerConnection(sender) {
-        const peerConnection = new RTCPeerConnection(config);
-
-        // 添加本地流到连接
-        const stream = document.getElementById('video').srcObject;
-        stream.getTracks().forEach(track => peerConnection.addTrack(track, stream));
-
-        // 处理远程流
-        peerConnection.ontrack = event => {
-            const remoteVideo = document.createElement('video');
-            remoteVideo.srcObject = event.streams[0];
-            remoteVideo.autoplay = true;
-            remoteVideo.muted = true;
-            document.body.appendChild(remoteVideo); // 或添加到特定元素
-        };
-
-        // 处理 ICE 候选
-        peerConnection.onicecandidate = event => {
-            if (event.candidate) {
-                signaling.send(JSON.stringify({'ice': event.candidate, 'receiver': sender}));
-            }
-        };
-
-        peerConnections[sender] = peerConnection;
-        return peerConnection;
-    }
-
-    // 获取本地媒体流
-    async function getMedia() {
-        const constraints = {video: true, audio: true};
-        const stream = await navigator.mediaDevices.getUserMedia(constraints);
-        document.getElementById('video').srcObject = stream;
-    }
 
 
 </script>

@@ -5,11 +5,16 @@ import json
 import uuid
 from datetime import datetime
 
+from agora_token_builder import RtcTokenBuilder
+from agora_token_builder.RtcTokenBuilder import Role_Publisher
 from flask import Blueprint, request, redirect, flash, url_for, render_template, session, jsonify
 
 from App.forms import RegisterForm, LoginForm
 from App.models import *
 from werkzeug.security import generate_password_hash, check_password_hash
+
+import agora_token_builder
+import time
 
 vac = Blueprint('vac', __name__)
 
@@ -143,3 +148,24 @@ def get_problem_description():
         return jsonify({'description': description})
     else:
         return jsonify({'description': None})
+
+
+
+
+
+@vac.route('/get_token')
+def get_token():
+    app_id = "b5a04df0256a451ebec8ee8774ef85ff"
+    app_certificate = "612b6116aa5c42a6b0900b77aba1086b"
+    channel_name = request.args.get('channelName')  # 从请求中获取频道名称
+    print(channel_name)
+    uid = request.args.get('uid', 0)  # 从请求中获取用户ID，如果没有则默认为 0
+    print(uid)
+
+    expiration_time_in_seconds = 7200  # Token 有效时间，例如1小时
+    current_time = int(time.time())
+    privilege_expired_ts = current_time + expiration_time_in_seconds
+
+    token = RtcTokenBuilder.buildTokenWithUid(app_id, app_certificate, channel_name, int(uid), Role_Publisher, privilege_expired_ts)
+    print(token)
+    return jsonify({'token': token})
