@@ -48,7 +48,7 @@
     var isChannelJoined = false;
 
 
-    var socket = io.connect('http://' + document.domain + ':' + location.port);
+    var socket = io.connect('https://' + document.domain + ':' + location.port);
 
 
     socket.on('connect', function () {
@@ -88,6 +88,7 @@
             var editorContent = editor.getSession().getValue();
             console.log("Sending content:", editorContent);
             socket.emit('update_editor_content', {content: editorContent});
+            console.log("Have send some content");
         }
     });
 
@@ -110,12 +111,7 @@
         try {
             await client.join("b5a04df0256a451ebec8ee8774ef85ff", channelName, token, uid);
             localTracks = await AgoraRTC.createMicrophoneAndCameraTracks();
-
-            // 播放视频轨道
-            if (localTracks[0] && localTracks[0].type === "video") {
-                localTracks[0].play("local-video");
-            }
-
+            localTracks[1].play("local-video");
             await client.publish(localTracks);
             console.log("Publish local streams successfully");
             isChannelJoined = true;
@@ -126,15 +122,17 @@
         }
     }
 
-
+    var remoteAudioTrack;
     client.on("user-published", async (user, mediaType) => {
         await client.subscribe(user, mediaType);
         console.log("subscribe success");
         if (mediaType === "video") {
             user.videoTrack.play("remote-video");
         }
+
         if (mediaType === "audio") {
             user.audioTrack.play();
+            remoteAudioTrack = user.audioTrack; // 获取远程音频轨道
         }
     });
 

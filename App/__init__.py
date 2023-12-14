@@ -9,6 +9,8 @@ from .extents import init_exts
 
 from .socket_config import socketio
 
+from flask_sslify import SSLify
+
 HOSTNAME = "127.0.0.1"
 PORT = 3306
 USERNAME = "root"
@@ -20,6 +22,7 @@ FLASK_DB = "online_interview_system"
 
 def create_app():
     app = Flask(__name__)
+    sslify = SSLify(app)
     CORS(app)
     app.register_blueprint(blueprint=blue)
     app.register_blueprint(admin_view.admin, url_prefix='/admin')
