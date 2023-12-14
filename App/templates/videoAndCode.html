@@ -10,7 +10,13 @@
 
     <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
 
-
+    <style>
+        #local-video, #remote-video {
+            width: 480px;
+            height: 360px;
+            border: 1px solid black;
+        }
+    </style>
     <title>Video Test & Interactive Whiteboard</title>
     <link rel="stylesheet" href="../static/videoChat.css"/>
 </head>
@@ -67,9 +73,15 @@
 <button id="runCode">Run Code</button>
 <div id="output"></div>
 
+
+<h3>local</h3>
+<div id="local-video"></div>
+<h3>remote</h3>
+<div id="remote-video"></div>
+
+
 <div id="container">
-    <video id="video" width="480" height="360" autoplay></video>
-    <div id="remote-container"></div>
+
 
     <div id="whiteboard-container">
         <canvas id="whiteboard" width="480" height="360"></canvas>
@@ -95,6 +107,102 @@
 
 <script>
 
+    var client = AgoraRTC.createClient({mode: "rtc", codec: "vp8"});
+    var localTracks = [];
+    var isJoiningChannel = false;
+    var isChannelJoined = false;
+
+
+    var socket = io.connect('http://' + document.domain + ':' + location.port);
+
+
+    socket.on('connect', function () {
+        fetch('/get_uid')
+            .then(response => response.json())
+            .then(data => {
+                var uid = data.UID;
+                console.log("Received UID from backend:", uid);
+                // 这里可以根据需要发送UID
+                socket.emit('send_uid', {UID: uid});
+            })
+            .catch(error => console.error('Error fetching UID:', error));
+    });
+
+
+    // 接收问题描述更新
+    socket.on('problem_description_updated', function (data) {
+        document.getElementById('problemDescription').textContent = data.description;
+        console.log("Received problem description:", data.description);
+    });
+
+    // 接收输出内容更新
+    socket.on('output_updated', function (data) {
+        document.getElementById('output').textContent = data.output;
+        console.log("Received output:", data.output);
+    });
+
+    async function joinChannel(token, channelName, uid) {
+        if (isJoiningChannel || isChannelJoined) {
+            console.log("Joining process is ongoing or already connected to the channel.");
+            return;
+        }
+        isJoiningChannel = true;
+        try {
+            await client.join("b5a04df0256a451ebec8ee8774ef85ff", channelName, token, uid);
+            localTracks = await AgoraRTC.createMicrophoneAndCameraTracks();
+            localTracks[1].play("local-video");
+            await client.publish(localTracks);
+            console.log("Publish local streams successfully");
+            isChannelJoined = true;
+        } catch (error) {
+            console.error('Error joining the channel:', error);
+        } finally {
+            isJoiningChannel = false;
+        }
+    }
+
+    var remoteAudioTrack;
+    client.on("user-published", async (user, mediaType) => {
+        await client.subscribe(user, mediaType);
+        console.log("subscribe success");
+        if (mediaType === "video") {
+            user.videoTrack.play("remote-video");
+        }
+
+        if (mediaType === "audio") {
+            user.audioTrack.play();
+            remoteAudioTrack = user.audioTrack; // 获取远程音频轨道
+        }
+    });
+
+    client.on("user-unpublished", user => {
+        console.log("unpublished user", user);
+        // 可以在这里处理用户停止发布的逻辑
+    });
+
+    async function leaveChannel() {
+        for (let track of localTracks) {
+            track.stop();
+            track.close();
+        }
+        await client.leave();
+        isChannelJoined = false;
+        console.log("Client leaves channel");
+    }
+
+    function getTokenAndJoinChannel(channelName, uid) {
+        fetch(`/vac/get_token?channelName=${channelName}&uid=${uid}`)
+            .then(response => response.json())
+            .then(data => {
+                joinChannel(data.token, channelName, uid);
+            })
+            .catch(error => console.error('Error:', error));
+    }
+
+    var channelName = "testChannel";
+    var uid = Math.floor(Math.random() * 10000);
+    getTokenAndJoinChannel(channelName, uid);
+
     document.getElementById('startRecording').addEventListener('click', async () => {
         try {
             const screenStream = await navigator.mediaDevices.getDisplayMedia({
@@ -104,11 +212,13 @@
             const audioStream = await navigator.mediaDevices.getUserMedia({
                 audio: true  // 捕获音频
             });
+            const tracks = [...screenStream.getVideoTracks(), ...audioStream.getAudioTracks()];
+            if (remoteAudioTrack) {
+                tracks.push(remoteAudioTrack.getMediaStreamTrack()); // 添加远程音频轨道
+            }
 
             // 合并音视频流
-            const tracks = [...screenStream.getVideoTracks(), ...audioStream.getAudioTracks()];
             const combinedStream = new MediaStream(tracks);
-
             const mediaRecorder = new MediaRecorder(combinedStream);
             let chunks = [];
 
@@ -139,87 +249,6 @@
             console.error('Error: ' + error);
         }
     });
-
-
-    var client = AgoraRTC.createClient({mode: "rtc", codec: "vp8"});
-    var localTracks = [];
-
-    var isJoiningChannel = false;
-    var isChannelJoined = false;
-
-    async function joinChannel(token, channelName, uid) {
-        if (isJoiningChannel || isChannelJoined) {
-            console.log("Joining process is ongoing or already connected to the channel.");
-            return;
-        }
-
-        isJoiningChannel = true;
-
-        try {
-            await client.join("b5a04df0256a451ebec8ee8774ef85ff", channelName, token, uid);
-            localTracks = await AgoraRTC.createMicrophoneAndCameraTracks();
-            localTracks[1].play("video");
-            await client.publish(localTracks);
-            console.log("Publish local streams successfully");
-            isChannelJoined = true;
-        } catch (error) {
-            console.error('Error joining the channel:', error);
-            // Handle error appropriately
-        } finally {
-            isJoiningChannel = false;
-        }
-    }
-
-    // 订阅远程用户
-    client.on("user-published", async (user, mediaType) => {
-        await client.subscribe(user, mediaType);
-        console.log("subscribe success");
-
-        if (mediaType === "video") {
-            remoteVideoTrack = user.videoTrack;
-            remoteVideoTrack.play("remote-container");
-        }
-
-        if (mediaType === "audio") {
-            user.audioTrack.play();
-        }
-    });
-
-    client.on("user-unpublished", user => {
-        if (remoteVideoTrack) {
-            remoteVideoTrack.stop();
-            remoteVideoTrack = null;
-        }
-        console.log("unpublished user", user);
-    });
-
-
-    // Leave and clean up
-    async function leaveChannel() {
-        for (let track of localTracks) {
-            isChannelJoined = false;
-            console.log("Client leaves channel");
-            track.stop();
-            track.close();
-        }
-        await client.leave();
-        console.log("Client leaves channel");
-    }
-
-    // Get token and join channel
-    function getTokenAndJoinChannel(channelName, uid) {
-        fetch(`/vac/get_token?channelName=${channelName}&uid=${uid}`)
-            .then(response => response.json())
-            .then(data => {
-                joinChannel(data.token, channelName, uid);
-            })
-            .catch(error => console.error('Error:', error));
-    }
-
-    // Example usage
-    var channelName = "testChannel";
-    var uid = Math.floor(Math.random() * 10000);
-    getTokenAndJoinChannel(channelName, uid);
 
 
     var socket = io.connect('http://' + document.domain + ':' + location.port);
@@ -338,100 +367,67 @@
     document.getElementById('problemSelector').addEventListener('change', updateEditorContent);
 
 
-    document.addEventListener('DOMContentLoaded', function () {
+    let optionValue = 1;//选择的题号
 
-        var uid = Math.floor(Math.random() * 10000);
-        getTokenAndJoinChannel(channelName, uid);
+    fetch('/vac/get_problems')
+        .then(response => response.json())
+        .then(data => {
+            const selectElement = document.getElementById('problemSelector');
+            data.forEach(problem => {
+                const option = document.createElement('option');
+                optionValue = problem.ProID;
+                option.textContent = problem.ProID + ": " + problem.Description;
+                selectElement.appendChild(option);
+            });
+        })
+        .catch(error => console.error('Error:', error));
 
-        {#initializeFastboard();#}
-
-
-        const constraints = {video: true, audio: true};
-        const video = document.getElementById('video');
-        let audioContext, analyser, dataArray;
-
-
-        let optionValue = 1;//选择的题号
-
-        fetch('/vac/get_problems')
-            .then(response => response.json())
-            .then(data => {
-                const selectElement = document.getElementById('problemSelector');
-                data.forEach(problem => {
-                    const option = document.createElement('option');
-                    optionValue = problem.ProID;
-                    option.textContent = problem.ProID + ": " + problem.Description;
-                    selectElement.appendChild(option);
-                });
-            })
-            .catch(error => console.error('Error:', error));
-
-        let selectedProblemId;
-        document.getElementById('problemSelector').addEventListener('change', function () {
-            selectedProblemId = this.value;
-            console.log("Selected Problem ID: ", selectedProblemId); // 用于调试
-        });
-
-
-        function handleSuccess(stream) {
-            video.srcObject = stream;
-
-            audioContext = new AudioContext();
-            const audioSource = audioContext.createMediaStreamSource(stream);
-            analyser = audioContext.createAnalyser();
-            audioSource.connect(analyser);
-            dataArray = new Uint8Array(analyser.frequencyBinCount);
-
-
-        }
-
-        function handleError(error) {
-            console.error('getUserMedia error: ', error);
-        }
-
-        navigator.mediaDevices.getUserMedia(constraints).then(handleSuccess).catch(handleError);
-
-
-        const canvas = document.getElementById('whiteboard');
-        const ctx = canvas.getContext('2d');
-        let drawing = false;
-
-        canvas.addEventListener('mousedown', () => {
-            drawing = true;
-        });
-
-        canvas.addEventListener('mouseup', () => {
-            drawing = false;
-            ctx.beginPath();
-        });
-
-        canvas.addEventListener('mousemove', draw);
-
-        function draw(event) {
-            if (!drawing) return;
-            ctx.lineWidth = document.getElementById('brushSize').value;
-            ctx.lineCap = 'round';
-            let rect = canvas.getBoundingClientRect();
-            ctx.lineTo(event.clientX - rect.left, event.clientY - rect.top);
-            ctx.stroke();
-            ctx.beginPath();
-            ctx.moveTo(event.clientX - rect.left, event.clientY - rect.top);
-        }
-
-        document.getElementById('colorPicker').addEventListener('change', (event) => {
-            ctx.strokeStyle = event.target.value;
-        });
-
-        document.getElementById('brushSize').addEventListener('input', (event) => {
-            document.getElementById('brushSizeDisplay').textContent = event.target.value;
-        });
-
-        document.getElementById('eraser').addEventListener('click', clearCanvas);
-
-        function clearCanvas() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-        }
+    let selectedProblemId;
+    document.getElementById('problemSelector').addEventListener('change', function () {
+        selectedProblemId = this.value;
+        console.log("Selected Problem ID: ", selectedProblemId); // 用于调试
     });
+
+
+    const canvas = document.getElementById('whiteboard');
+    const ctx = canvas.getContext('2d');
+    let drawing = false;
+
+    canvas.addEventListener('mousedown', () => {
+        drawing = true;
+    });
+
+    canvas.addEventListener('mouseup', () => {
+        drawing = false;
+        ctx.beginPath();
+    });
+
+    canvas.addEventListener('mousemove', draw);
+
+    function draw(event) {
+        if (!drawing) return;
+        ctx.lineWidth = document.getElementById('brushSize').value;
+        ctx.lineCap = 'round';
+        let rect = canvas.getBoundingClientRect();
+        ctx.lineTo(event.clientX - rect.left, event.clientY - rect.top);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(event.clientX - rect.left, event.clientY - rect.top);
+    }
+
+    document.getElementById('colorPicker').addEventListener('change', (event) => {
+        ctx.strokeStyle = event.target.value;
+    });
+
+    document.getElementById('brushSize').addEventListener('input', (event) => {
+        document.getElementById('brushSizeDisplay').textContent = event.target.value;
+    });
+
+    document.getElementById('eraser').addEventListener('click', clearCanvas);
+
+    function clearCanvas() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
 
 
     document.getElementById('runCode').addEventListener('click', function () {

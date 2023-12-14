@@ -110,7 +110,12 @@
         try {
             await client.join("b5a04df0256a451ebec8ee8774ef85ff", channelName, token, uid);
             localTracks = await AgoraRTC.createMicrophoneAndCameraTracks();
-            localTracks[1].play("local-video");
+
+            // 播放视频轨道
+            if (localTracks[0] && localTracks[0].type === "video") {
+                localTracks[0].play("local-video");
+            }
+
             await client.publish(localTracks);
             console.log("Publish local streams successfully");
             isChannelJoined = true;
@@ -120,6 +125,7 @@
             isJoiningChannel = false;
         }
     }
+
 
     client.on("user-published", async (user, mediaType) => {
         await client.subscribe(user, mediaType);
