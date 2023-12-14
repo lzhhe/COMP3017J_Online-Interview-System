@@ -11,7 +11,23 @@ from .socket_config import socketio
 
 from flask_sslify import SSLify
 
-HOSTNAME = "192.168.104.220"
+import socket
+
+# 动态获取ip
+def get_host_ip():
+    try:
+        # 创建一个socket来连接一个不存在的地址
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        ip = s.getsockname()[0]
+    finally:
+        s.close()
+    print(ip)
+    return ip
+
+
+
+HOSTNAME = get_host_ip()
 PORT = 3306
 USERNAME = "root"
 # PASSWORD = "2003721gavin?"

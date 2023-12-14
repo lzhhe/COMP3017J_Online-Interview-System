@@ -238,8 +238,8 @@ def get_earliest_application():
             'username': username,
             'email': email,
             'positionName': positionName,
-            'interviewStartTime': startTime.isoformat(),
-            'interviewEndTime': endTime.isoformat()
+            'interviewStartTime': startTime.isoformat().replace('T', ' '),
+            'interviewEndTime': endTime.isoformat().replace('T', ' ')
         }
         return jsonify(application_data)
     else:
@@ -324,14 +324,41 @@ def get_interview_results():
 
     results_data = []
     for result, username, email, positionName, grade, evaluation, status in interview_results:
+        # 构造视频文件名
+
+
         result_info = {
             'username': username,
             'email': email,
             'positionName': positionName,
             'grade': grade,
             'evaluation': evaluation,
-            'status': 'Accepted' if status == 1 else 'Rejected' if status == 0 else 'Pending'
+            'status': 'Accepted' if status == 1 else 'Rejected' if status == 0 else 'Pending',
+            # 'videoFilename': video_filename  # 添加视频文件名
         }
         results_data.append(result_info)
 
     return jsonify(results_data)
+
+@vac.route('/save_video', methods=['POST'])
+def save_video():
+    print("执行储存代码")
+    video_file = request.data
+    username = request.headers.get('Username')
+    period = request.headers.get('Period')
+    print(username)
+    print(period)
+
+    # 确保video目录存在
+    os.makedirs('video', exist_ok=True)
+
+    # 构造文件名
+
+    filename = f"{username}_{period}.webm".replace(':', '_')
+
+    # 保存文件
+    filepath = os.path.join('video', filename)
+    with open(filepath, 'wb') as f:
+        f.write(video_file)
+    print("储存完成")
+    return jsonify({'message': 'Video saved successfully!'})

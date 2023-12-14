@@ -200,49 +200,82 @@
     getTokenAndJoinChannel(channelName, uid);
 
     document.getElementById('startRecording').addEventListener('click', async () => {
+        console.log("开始录制");
         try {
+            // 获取屏幕和麦克风的音视频流
+            console.log("尝试获取屏幕和麦克风的音视频流");
             const screenStream = await navigator.mediaDevices.getDisplayMedia({
-                video: true  // 捕获视频
+                video: true,
+                audio: true // 尝试捕获屏幕音频
             });
+            console.log("屏幕流获取成功");
 
-            const audioStream = await navigator.mediaDevices.getUserMedia({
-                audio: true  // 捕获音频
+            const micStream = await navigator.mediaDevices.getUserMedia({
+                audio: true // 捕获麦克风音频
             });
-            const tracks = [...screenStream.getVideoTracks(), ...audioStream.getAudioTracks()];
-            if (remoteAudioTrack) {
-                tracks.push(remoteAudioTrack.getMediaStreamTrack()); // 添加远程音频轨道
-            }
+            console.log("麦克风流获取成功");
 
             // 合并音视频流
-            const combinedStream = new MediaStream(tracks);
-            const mediaRecorder = new MediaRecorder(combinedStream);
-            let chunks = [];
+            console.log("合并音视频流");
+            const tracks = [
+                ...screenStream.getVideoTracks(),
+                ...screenStream.getAudioTracks(),
+                ...micStream.getAudioTracks()
+            ];
+            console.log("音视频流合并完成");
 
-            mediaRecorder.ondataavailable = e => chunks.push(e.data);
+            const combinedStream = new MediaStream(tracks);
+            console.log("创建媒体流成功");
+
+            // 初始化MediaRecorder
+            const mediaRecorder = new MediaRecorder(combinedStream);
+            console.log("MediaRecorder 初始化成功");
+
+            // 添加事件监听器
+            let chunks = [];
+            mediaRecorder.ondataavailable = e => {
+                console.log("收到数据块");
+                chunks.push(e.data);
+            };
             mediaRecorder.onstop = async () => {
+                console.log("录制停止，处理录制的视频数据");
                 const completeBlob = new Blob(chunks, {type: 'video/webm'});
-                const downloadLink = document.createElement('a');
-                downloadLink.href = URL.createObjectURL(completeBlob);
-                downloadLink.download = 'recorded-screen-with-audio.webm';
-                document.body.appendChild(downloadLink);
-                downloadLink.click();
-                document.body.removeChild(downloadLink);
+                fetch('/vac/save_video', {
+                    method: 'POST',
+                    body: completeBlob,
+                    headers: {
+                        'Content-Type': 'video/webm',
+                        'Username': username, // 从变量获取用户名
+                        'Period': period // 从变量获取时间段
+                    }
+                }).then(response => {
+                    console.log("视频数据发送完毕，响应状态: ", response.status);
+                    return response.json();
+                })
+                    .then(data => console.log("后端响应:", data))
+                    .catch(error => console.error('发送视频数据时出错:', error));
             };
 
+            // 开始录制
             mediaRecorder.start();
+            console.log("MediaRecorder 开始录制");
 
+            // 更改按钮状态
             document.getElementById('startRecording').disabled = true;
             document.getElementById('stopRecording').disabled = false;
 
+            // 处理停止录制的逻辑
             document.getElementById('stopRecording').addEventListener('click', () => {
+                console.log("停止录制按钮被点击");
                 mediaRecorder.stop();
+                console.log("MediaRecorder 停止录制");
                 screenStream.getTracks().forEach(track => track.stop()); // 停止屏幕捕获
-                audioStream.getTracks().forEach(track => track.stop()); // 停止音频捕获
+                micStream.getTracks().forEach(track => track.stop()); // 停止麦克风捕获
                 document.getElementById('startRecording').disabled = false;
                 document.getElementById('stopRecording').disabled = true;
             }, {once: true});
         } catch (error) {
-            console.error('Error: ' + error);
+            console.error('录制过程中出现错误:', error);
         }
     });
 
@@ -273,10 +306,14 @@
 
     // 更新表格的函数
     var AID;
+    var username;
+    var period;
 
     function updateApplicationTable(data) {
         var table = document.getElementById('applicationTable');
         AID = data.AID;
+        username = data.username
+        period = data.interviewStartTime + " - " + data.interviewEndTime;
         // 清空表格内容，除了标题行
         for (var i = table.rows.length - 1; i > 0; i--) {
             table.deleteRow(i);
