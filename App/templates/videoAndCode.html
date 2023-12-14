@@ -15,6 +15,14 @@
     <link rel="stylesheet" href="../static/videoChat.css"/>
 </head>
 <body>
+
+
+<button id="startRecording">开始录屏</button>
+<button id="stopRecording" disabled>停止录屏</button>
+<video id="screenVideo" controls style="display: none;"></video>
+<a id="downloadLink" style="display: none;">下载录像</a>
+
+
 <!-- 数据显示表格 -->
 <table id="applicationTable" border="1">
     <tr>
@@ -28,24 +36,24 @@
 </table>
 
 <h2>Interview Result Form</h2>
-    <form id="interviewForm" action="/vac/submit-interview-result" method="post">
+<form id="interviewForm" action="/vac/submit-interview-result" method="post">
 
 
-        <label for="grade">Grade:</label>
-        <input type="number" id="grade" name="grade" required><br><br>
+    <label for="grade">Grade:</label>
+    <input type="number" id="grade" name="grade" required><br><br>
 
-        <label for="evaluation">Evaluation:</label>
-        <textarea id="evaluation" name="evaluation" required></textarea><br><br>
+    <label for="evaluation">Evaluation:</label>
+    <textarea id="evaluation" name="evaluation" required></textarea><br><br>
 
-        <label for="status">Status:</label>
-        <select id="status" name="status" required>
-            <option value="0">Reject</option>
-            <option value="1">Accept</option>
-            <option value="2">Pending</option>
-        </select><br><br>
+    <label for="status">Status:</label>
+    <select id="status" name="status" required>
+        <option value="0">Reject</option>
+        <option value="1">Accept</option>
+        <option value="2">Pending</option>
+    </select><br><br>
 
-        <input type="submit" value="Submit">
-    </form>
+    <input type="submit" value="Submit">
+</form>
 
 <select id="languageSelector">
     <option value="python">Python</option>
@@ -87,6 +95,51 @@
 
 <script>
 
+    document.getElementById('startRecording').addEventListener('click', async () => {
+        try {
+            const screenStream = await navigator.mediaDevices.getDisplayMedia({
+                video: true  // 捕获视频
+            });
+
+            const audioStream = await navigator.mediaDevices.getUserMedia({
+                audio: true  // 捕获音频
+            });
+
+            // 合并音视频流
+            const tracks = [...screenStream.getVideoTracks(), ...audioStream.getAudioTracks()];
+            const combinedStream = new MediaStream(tracks);
+
+            const mediaRecorder = new MediaRecorder(combinedStream);
+            let chunks = [];
+
+            mediaRecorder.ondataavailable = e => chunks.push(e.data);
+            mediaRecorder.onstop = async () => {
+                const completeBlob = new Blob(chunks, {type: 'video/webm'});
+                const downloadLink = document.createElement('a');
+                downloadLink.href = URL.createObjectURL(completeBlob);
+                downloadLink.download = 'recorded-screen-with-audio.webm';
+                document.body.appendChild(downloadLink);
+                downloadLink.click();
+                document.body.removeChild(downloadLink);
+            };
+
+            mediaRecorder.start();
+
+            document.getElementById('startRecording').disabled = true;
+            document.getElementById('stopRecording').disabled = false;
+
+            document.getElementById('stopRecording').addEventListener('click', () => {
+                mediaRecorder.stop();
+                screenStream.getTracks().forEach(track => track.stop()); // 停止屏幕捕获
+                audioStream.getTracks().forEach(track => track.stop()); // 停止音频捕获
+                document.getElementById('startRecording').disabled = false;
+                document.getElementById('stopRecording').disabled = true;
+            }, {once: true});
+        } catch (error) {
+            console.error('Error: ' + error);
+        }
+    });
+
 
     var client = AgoraRTC.createClient({mode: "rtc", codec: "vp8"});
     var localTracks = [];
@@ -117,23 +170,29 @@
         }
     }
 
-    // Subscribe to remote user
+    // 订阅远程用户
     client.on("user-published", async (user, mediaType) => {
         await client.subscribe(user, mediaType);
         console.log("subscribe success");
 
         if (mediaType === "video") {
-            user.videoTrack.play("remote-container");
+            remoteVideoTrack = user.videoTrack;
+            remoteVideoTrack.play("remote-container");
         }
+
         if (mediaType === "audio") {
             user.audioTrack.play();
         }
     });
 
     client.on("user-unpublished", user => {
-        // Handle user unpublish logic
+        if (remoteVideoTrack) {
+            remoteVideoTrack.stop();
+            remoteVideoTrack = null;
+        }
         console.log("unpublished user", user);
     });
+
 
     // Leave and clean up
     async function leaveChannel() {
@@ -214,19 +273,19 @@
     editor.setTheme("ace/theme/monokai");
     editor.session.setMode("ace/mode/python");
 
-    document.getElementById('interviewForm').addEventListener('submit', function(e) {
-            var editorContent = editor.getValue();
-            var hiddenInput = document.createElement('input');
-            hiddenInput.type = 'hidden';
-            hiddenInput.name = 'editorContent';
-            hiddenInput.value = editorContent;
-            this.appendChild(hiddenInput);
-            var hiddenInput2 = document.createElement('input');
-            hiddenInput2.type = 'hidden';
-            hiddenInput2.name = 'AID';
-            hiddenInput2.value = AID;
-            this.appendChild(hiddenInput2);
-        });
+    document.getElementById('interviewForm').addEventListener('submit', function (e) {
+        var editorContent = editor.getValue();
+        var hiddenInput = document.createElement('input');
+        hiddenInput.type = 'hidden';
+        hiddenInput.name = 'editorContent';
+        hiddenInput.value = editorContent;
+        this.appendChild(hiddenInput);
+        var hiddenInput2 = document.createElement('input');
+        hiddenInput2.type = 'hidden';
+        hiddenInput2.name = 'AID';
+        hiddenInput2.value = AID;
+        this.appendChild(hiddenInput2);
+    });
 
 
     document.getElementById('languageSelector').addEventListener('change', function () {
