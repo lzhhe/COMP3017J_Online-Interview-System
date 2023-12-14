@@ -209,3 +209,280 @@ body {
     font-weight: 500;
     color: rgba(81, 86, 93, 0.7);
 }
+/*以下内容是12.14凌晨写的新版CSS*/
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    line-height: 1.6;
+}
+
+h1, h2 {
+    color: #333;
+    margin-bottom: 10px;
+    /*居中*/
+    text-align: center;
+
+}
+
+/* Form Styling */
+.application-form {
+    background: white;
+    padding: 20px;
+    margin: 0px auto;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    /*居中*/
+    width: 50%;
+    margin-top: 50px;
+
+
+}
+
+.application-form form {
+    display: grid;
+    grid-gap: 10px;
+}
+
+.application-form label {
+    margin-bottom: 5px;
+    display: block;
+    color: #666;
+}
+
+.application-form input[type='number'],
+.application-form select,
+.application-form textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.application-form button {
+    background-color: #5cb85c;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.application-form button:hover {
+    background-color: #4cae4c;
+}
+
+/* Button Styling */
+button {
+    background-color: #0275d8;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin: 20px 0;
+}
+
+button:hover {
+    background-color: #025aa5;
+}
+
+/*以下内容是打印出来的两个表格*/
+#applicationsList {
+    display: flex;
+    justify-content: center; /* Horizontally center the content */
+    align-items: center; /* Vertically center the content, if needed */
+    margin: 20px 0;
+    overflow-x: auto;
+
+}
+
+#applicationsList table {
+    width: 50%;
+    border-collapse: collapse;
+}
+
+#applicationsList th,
+#applicationsList td {
+    text-align: left;
+    padding: 8px;
+    border-bottom: 1px solid #ddd;
+}
+
+#applicationsList th {
+    background-color: #4CAF50;
+    color: white;
+}
+
+#applicationsList tr:nth-child(even) {
+    background-color: #f2f2f2;
+}
+
+#applicationsList tr:hover {
+    background-color: #ddd;
+}
+/*interviewResultsList*/
+#interviewResultsList {
+    display: flex;
+    justify-content: center; /* Horizontally center the content */
+    align-items: center; /* Vertically center the content, if needed */
+    margin: 20px 0;
+    overflow-x: auto;
+}
+
+#interviewResultsList table {
+    width: 50%;
+    border-collapse: collapse;
+}
+
+#interviewResultsList th,
+#interviewResultsList td {
+    text-align: left;
+    padding: 8px;
+    border-bottom: 1px solid #ddd;
+}
+
+#interviewResultsList th {
+    background-color: #4CAF50;
+    color: white;
+}
+
+#interviewResultsList tr:nth-child(even) {
+    background-color: #f2f2f2;
+}
+
+#interviewResultsList tr:hover {
+    background-color: #ddd;
+}
+
+/*addPositionForm*/
+#addPositionForm {
+    background: white;
+    padding: 20px;
+    margin: 0px auto;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    /*居中*/
+    width: 50%;
+    margin-top: 50px;
+}
+
+#addPositionForm form {
+    display: grid;
+    grid-gap: 10px;
+}
+
+#addPositionForm label {
+    margin-bottom: 5px;
+    display: block;
+    color: #666;
+}
+
+#addPositionForm input[type='number'],
+#addPositionForm select,
+#addPositionForm textarea {
+    width: 50%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+#addPositionForm button {
+    background-color: #5cb85c;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+#addPositionForm button:hover {
+    background-color: #4cae4c;
+}
+
+/*addMeetingRoomForm*/
+#addMeetingRoomForm {
+    background: white;
+    padding: 20px;
+    margin: 0px auto;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    /*居中*/
+    width: 50%;
+    margin-top: 50px;
+}
+
+#addMeetingRoomForm form {
+    display: grid;
+    grid-gap: 10px;
+}
+
+#addMeetingRoomForm label {
+    margin-bottom: 5px;
+    display: block;
+    color: #666;
+}
+
+#addMeetingRoomForm input[type='number'],
+#addMeetingRoomForm select,
+#addMeetingRoomForm textarea {
+    width: 50%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+#addMeetingRoomForm button {
+    background-color: #5cb85c;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+#addMeetingRoomForm button:hover {
+    background-color: #4cae4c;
+}
+
+/*applicationsContainer*/
+#applicationsContainer {
+    display: flex;
+    justify-content: center; /* Horizontally center the content */
+    align-items: center; /* Vertically center the content, if needed */
+    margin: 20px 0;
+    overflow-x: auto;
+}
+
+#applicationsContainer table {
+    width: 50%;
+    border-collapse: collapse;
+}
+
+#applicationsContainer th,
+#applicationsContainer td {
+    text-align: left;
+    padding: 8px;
+    border-bottom: 1px solid #ddd;
+}
+
+#applicationsContainer th {
+    background-color: #4CAF50;
+    color: white;
+}
+
+#applicationsContainer tr:nth-child(even) {
+    background-color: #f2f2f2;
+}
+
+#applicationsContainer tr:hover {
+    background-color: #ddd;
+}
+
+/*interviewResultsContainer*/
+

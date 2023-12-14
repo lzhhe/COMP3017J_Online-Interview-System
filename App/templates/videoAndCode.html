@@ -15,6 +15,37 @@
     <link rel="stylesheet" href="../static/videoChat.css"/>
 </head>
 <body>
+<!-- 数据显示表格 -->
+<table id="applicationTable" border="1">
+    <tr>
+        <th>用户名</th>
+        <th>邮箱</th>
+        <th>应聘职位</th>
+        <th>自我介绍</th>
+        <th>预期薪资</th>
+        <th>时间段</th>
+    </tr>
+</table>
+
+<h2>Interview Result Form</h2>
+    <form id="interviewForm" action="/vac/submit-interview-result" method="post">
+
+
+        <label for="grade">Grade:</label>
+        <input type="number" id="grade" name="grade" required><br><br>
+
+        <label for="evaluation">Evaluation:</label>
+        <textarea id="evaluation" name="evaluation" required></textarea><br><br>
+
+        <label for="status">Status:</label>
+        <select id="status" name="status" required>
+            <option value="0">Reject</option>
+            <option value="1">Accept</option>
+            <option value="2">Pending</option>
+        </select><br><br>
+
+        <input type="submit" value="Submit">
+    </form>
 
 <select id="languageSelector">
     <option value="python">Python</option>
@@ -134,10 +165,68 @@
 
     var socket = io.connect('http://' + document.domain + ':' + location.port);
 
+    socket.on('uid_received', function (data) {
+        var uid = data.UID;
+        console.log("UID received from server:", uid);
+        // 发送 UID 到后端
+        fetch('/vac/get-earliest-application', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({UID: uid})
+        })
+            .then(response => response.json())
+            .then(data => {
+                console.log("Response from server:", data);
+                if (!data.error) {
+                    // 使用从服务器接收到的数据更新表格
+                    updateApplicationTable(data);
+                } else {
+                    console.error('Error:', data.error);
+                }
+            })
+            .catch(error => console.error('Error:', error));
+    });
+
+    // 更新表格的函数
+    var AID;
+
+    function updateApplicationTable(data) {
+        var table = document.getElementById('applicationTable');
+        AID = data.AID;
+        // 清空表格内容，除了标题行
+        for (var i = table.rows.length - 1; i > 0; i--) {
+            table.deleteRow(i);
+        }
+
+        // 插入新的数据行
+        var row = table.insertRow(-1);
+        row.insertCell(0).innerHTML = data.username;
+        row.insertCell(1).innerHTML = data.email;
+        row.insertCell(2).innerHTML = data.positionName;
+        row.insertCell(3).innerHTML = data.introduction;
+        row.insertCell(4).innerHTML = data.salary;
+        row.insertCell(5).innerHTML = data.interviewStartTime + " - " + data.interviewEndTime;
+    }
+
     var editor = ace.edit("editor");
     editor.setTheme("ace/theme/monokai");
     editor.session.setMode("ace/mode/python");
 
+    document.getElementById('interviewForm').addEventListener('submit', function(e) {
+            var editorContent = editor.getValue();
+            var hiddenInput = document.createElement('input');
+            hiddenInput.type = 'hidden';
+            hiddenInput.name = 'editorContent';
+            hiddenInput.value = editorContent;
+            this.appendChild(hiddenInput);
+            var hiddenInput2 = document.createElement('input');
+            hiddenInput2.type = 'hidden';
+            hiddenInput2.name = 'AID';
+            hiddenInput2.value = AID;
+            this.appendChild(hiddenInput2);
+        });
 
 
     document.getElementById('languageSelector').addEventListener('change', function () {
@@ -353,6 +442,7 @@
         var output = document.getElementById('output').textContent;
         socket.emit('output_update', {output: output});
     }
+
 
 </script>
 

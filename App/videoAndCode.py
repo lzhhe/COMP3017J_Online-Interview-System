@@ -5,7 +5,7 @@ import uuid
 
 from agora_token_builder import RtcTokenBuilder
 from agora_token_builder.RtcTokenBuilder import Role_Publisher
-from flask import Blueprint, request, render_template, jsonify
+from flask import Blueprint, request, render_template, jsonify, session, redirect, url_for
 from flask_socketio import emit
 
 from .socket_config import socketio
@@ -145,9 +145,6 @@ def get_problem_description():
         return jsonify({'description': None})
 
 
-
-
-
 @vac.route('/get_token')
 def get_token():
     app_id = "b5a04df0256a451ebec8ee8774ef85ff"
@@ -161,7 +158,8 @@ def get_token():
     current_time = int(time.time())
     privilege_expired_ts = current_time + expiration_time_in_seconds
 
-    token = RtcTokenBuilder.buildTokenWithUid(app_id, app_certificate, channel_name, int(uid), Role_Publisher, privilege_expired_ts)
+    token = RtcTokenBuilder.buildTokenWithUid(app_id, app_certificate, channel_name, int(uid), Role_Publisher,
+                                              privilege_expired_ts)
     print(token)
     return jsonify({'token': token})
 
@@ -171,11 +169,164 @@ def handle_editor_update(data):
     # print("USING the update_editor_content function")
     emit('editor_content_updated', data, broadcast=True, include_self=False)
 
+
 @socketio.on('problem_description')
 def handle_problem_description(data):
     emit('problem_description_updated', data, broadcast=True)
+
 
 @socketio.on('output_update')
 def handle_output_update(data):
     emit('output_updated', data, broadcast=True)
 
+
+@socketio.on('send_uid')
+def handle_send_uid(data):
+    uid = data['UID']
+    # 这里可以进行必要的处理，例如验证UID
+    emit('uid_received', {'UID': uid}, broadcast=True)  # 广播给所有客户端
+
+
+@vac.route('/get-earliest-application', methods=['POST'])
+def get_earliest_application():
+    data = request.json
+    uid = data.get('UID')
+    print(uid)
+
+    earliest_application = db.session.query(
+        Application,
+        User.username,
+        User.email,
+        Position.positionName,
+        MeetingRoom.startTime,
+        MeetingRoom.endTime
+    ).join(User, User.UID == Application.UID
+           ).join(Position, Position.PID == Application.PID
+                  ).join(MeetingRoom, MeetingRoom.MID == Application.MID
+                         ).filter(Application.UID == uid
+                                  ).order_by(Application.AID
+                                             ).first()
+
+    if earliest_application:
+
+        application, username, email, positionName, startTime, endTime = earliest_application
+        print("Application Data:", {
+            'AID': application.AID,
+            'UID': application.UID,
+            'PID': application.PID,
+            'MID': application.MID,
+            'salary': application.salary,
+            'introduction': application.introduction,
+            'username': username,
+            'email': email,
+            'positionName': positionName,
+            'startTime': startTime,
+            'endTime': endTime
+        })
+        application_data = {
+            'AID': application.AID,
+            'UID': application.UID,
+            'PID': application.PID,
+            'MID': application.MID,
+            'salary': application.salary,
+            'introduction': application.introduction,
+            'username': username,
+            'email': email,
+            'positionName': positionName,
+            'interviewStartTime': startTime.isoformat(),
+            'interviewEndTime': endTime.isoformat()
+        }
+        return jsonify(application_data)
+    else:
+        return jsonify({'error': 'No applications found for the user'}), 404
+
+
+@vac.route('/submit-interview-result', methods=['POST'])
+def submit_interview_result():
+    aid = request.form.get('AID')
+    answer = request.form.get('editorContent')
+    grade = request.form.get('grade')
+    evaluation = request.form.get('evaluation')
+    status = request.form.get('status')
+    print(aid, answer, grade, evaluation, status)
+
+    # 创建一个新的 InterviewResult 实例
+    new_interview_result = InterviewResult(
+        AID=aid,
+        answer=answer,
+        grade=grade,
+        evaluation=evaluation,
+        status=status
+    )
+
+    # 添加到数据库并提交
+    db.session.add(new_interview_result)
+    db.session.commit()
+
+    # 重定向或返回成功消息
+    return render_template('interviewer_home.html')
+
+
+@vac.route('/get-accepted-applications')
+def get_accepted_applications():
+    # 查询所有状态为接受（例如，status = 1）的申请
+    accepted_applications = db.session.query(
+        Application,
+        User.username,
+        User.email,
+        Position.positionName,
+        MeetingRoom.startTime,
+        MeetingRoom.endTime,
+        Application.salary,
+        Application.introduction
+    ).join(User, User.UID == Application.UID
+    ).join(Position, Position.PID == Application.PID
+    ).join(MeetingRoom, MeetingRoom.MID == Application.MID
+    ).filter(Application.status == 1  # 假设 status = 1 表示接受
+    ).all()
+
+    applications_data = []
+    for application, username, email, positionName, startTime, endTime, salary, introduction in accepted_applications:
+        application_info = {
+            'username': username,
+            'email': email,
+            'positionName': positionName,
+            'interviewStartTime': startTime.isoformat(),
+            'interviewEndTime': endTime.isoformat(),
+            'salary': salary,
+            'introduction': introduction
+        }
+        applications_data.append(application_info)
+
+    # 返回 JSON 数据
+    return jsonify(applications_data)
+
+@vac.route('/get-interview-results')
+def get_interview_results():
+    # 查询所有面试结果
+    interview_results = db.session.query(
+        InterviewResult,
+        User.username,
+        User.email,
+        Position.positionName,
+        InterviewResult.grade,
+        InterviewResult.evaluation,
+        InterviewResult.status
+    ).join(Application, Application.AID == InterviewResult.AID
+    ).join(User, User.UID == Application.UID
+    ).join(Position, Position.PID == Application.PID
+    ).all()
+
+    results_data = []
+    for result, username, email, positionName, grade, evaluation, status in interview_results:
+        result_info = {
+            'username': username,
+            'email': email,
+            'positionName': positionName,
+            'grade': grade,
+            'evaluation': evaluation,
+            'status': 'Accepted' if status == 1 else 'Rejected' if status == 0 else 'Pending'
+        }
+        results_data.append(result_info)
+
+    return jsonify(results_data)

@@ -50,6 +50,20 @@
 
     var socket = io.connect('http://' + document.domain + ':' + location.port);
 
+
+    socket.on('connect', function () {
+        fetch('/get_uid')
+            .then(response => response.json())
+            .then(data => {
+                var uid = data.UID;
+                console.log("Received UID from backend:", uid);
+                // 这里可以根据需要发送UID
+                socket.emit('send_uid', {UID: uid});
+            })
+            .catch(error => console.error('Error fetching UID:', error));
+    });
+
+
     // 接收问题描述更新
     socket.on('problem_description_updated', function (data) {
         document.getElementById('problemDescription').textContent = data.description;
@@ -85,8 +99,6 @@
         }
         isUpdating = false; // 清除更新标志
     });
-
-
 
 
     async function joinChannel(token, channelName, uid) {

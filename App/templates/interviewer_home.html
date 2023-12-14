@@ -1,10 +1,64 @@
 {% extends 'base.html' %}
 
 {% block title %}Interviewer Calendar{% endblock %}
+{% block content %}
+    <div>
+        <button id="goToVideoAndCode">Go to Video and Code</button>
+        <button id="goToReceive">Go to receive</button>
+
+        <h2>Accepted Applications</h2>
+        <table id="acceptedApplicationsTable" border="1">
+            <thead>
+            <tr>
+                <th>Username</th>
+                <th>Email</th>
+                <th>Position Name</th>
+                <th>Interview Start Time</th>
+                <th>Interview End Time</th>
+                <th>Salary</th>
+                <th>Introduction</th>
+            </tr>
+            </thead>
+            <tbody>
+            <!-- 数据将在这里填充 -->
+            </tbody>
+        </table>
+
+
+        <!-- 面试结果显示表格 -->
+        <h2>Interview Results</h2>
+        <table id="interviewResultsTable" border="1">
+            <thead>
+            <tr>
+                <th>用户名</th>
+                <th>邮箱</th>
+                <th>应聘职位</th>
+                <th>分数</th>
+                <th>评价</th>
+                <th>结果状态</th>
+            </tr>
+            </thead>
+            <tbody>
+            <!-- 数据将在这里填充 -->
+            </tbody>
+        </table>
+
+
+    </div>
+
+{% endblock %}
 
 {% block scripts %}
     {{ super() }}
     <script>
+        document.getElementById("goToVideoAndCode").addEventListener("click", function () {
+            window.location.href = '/vac/videoAndCode.html'; // 修改为正确的 URL
+        });
+        document.getElementById("goToReceive").addEventListener("click", function () {
+            window.location.href = '/vac/candidate.html';
+        });
+
+
         function updateCalendarWithMeetingRooms() {
             console.log("Updating calendar with meeting rooms...");
 
@@ -64,10 +118,63 @@
             });
         }
 
+        function fetchAcceptedApplications() {
+            fetch('/vac/get-accepted-applications') // 确保这是正确的后端路由
+                .then(response => response.json())
+                .then(data => {
+                    populateApplicationsTable(data);
+                })
+                .catch(error => {
+                    console.error('Error fetching applications:', error);
+                });
+        }
+
+        function populateApplicationsTable(applications) {
+            const table = document.getElementById('acceptedApplicationsTable').getElementsByTagName('tbody')[0];
+            applications.forEach(app => {
+                const row = table.insertRow();
+                row.insertCell().textContent = app.username;
+                row.insertCell().textContent = app.email;
+                row.insertCell().textContent = app.positionName;
+                row.insertCell().textContent = app.interviewStartTime;
+                row.insertCell().textContent = app.interviewEndTime;
+                row.insertCell().textContent = app.salary;
+                row.insertCell().textContent = app.introduction;
+            });
+        }
+
+        function fetchInterviewResults() {
+            fetch('/vac/get-interview-results')  // 确保这是正确的后端路由
+                .then(response => response.json())
+                .then(data => {
+                    populateInterviewResultsTable(data);
+                })
+                .catch(error => {
+                    console.error('Error fetching interview results:', error);
+                });
+        }
+
+        function populateInterviewResultsTable(results) {
+            const table = document.getElementById('interviewResultsTable').getElementsByTagName('tbody')[0];
+            results.forEach(result => {
+                const row = table.insertRow();
+                row.insertCell().textContent = result.username;
+                row.insertCell().textContent = result.email;
+                row.insertCell().textContent = result.positionName;
+                row.insertCell().textContent = result.grade;
+                row.insertCell().textContent = result.evaluation;
+                row.insertCell().textContent = result.status;  // 确保状态已经格式化为可读形式
+            });
+        }
+
 
         $(document).ready(function () {
             updateCalendarWithMeetingRooms();
+            fetchAcceptedApplications(); // 新增函数调用
+            fetchInterviewResults();
         });
+
+
     </script>
 
 
@@ -75,18 +182,4 @@
 
 
 
-{% endblock %}
-{% block content %}
-    <div>
-        <button id="goToVideoAndCode">Go to Video and Code</button>
-        <button id="goToReceive">Go to receive</button>
-    </div>
-    <script>
-        document.getElementById("goToVideoAndCode").addEventListener("click", function () {
-            window.location.href = '/vac/videoAndCode.html'; // 修改为正确的 URL
-        });
-        document.getElementById("goToReceive").addEventListener("click", function () {
-            window.location.href = '/vac/candidate.html'; // 修改为正确的 URL
-        });
-    </script>
 {% endblock %}

@@ -177,3 +177,8 @@ def view_interview_results():
         return jsonify(formatted_results)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+@blue.route('/get_uid')
+def get_uid():
+    uid = session.get('UID', 'defaultUID')
+    return jsonify({'UID': uid})

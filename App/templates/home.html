@@ -203,6 +203,10 @@
 
 
         });
+
+        document.getElementById("goToReceive").addEventListener("click", function () {
+            window.location.href = '/vac/candidate.html';
+        });
     </script>
 {% endblock %}
 </head>
@@ -240,7 +244,7 @@
         <button type="submit">Submit Application</button>
     </form>
 </div>
-
+<button id="goToReceive">Go to MeetingRoom</button>
 <div class="view-applications">
     <button id="viewApplicationsButton">View My Applications</button>
     <div id="applicationsList"></div>
