@@ -100,10 +100,6 @@
         </div>
     </div>
 </div>
-{#<script type ="module">
-    // Initialize AgoraRTC client
-    import {createFastboard} from "@netless/fastboard";
-</script>#}
 
 <script>
 
@@ -407,11 +403,27 @@
         ctx.lineWidth = document.getElementById('brushSize').value;
         ctx.lineCap = 'round';
         let rect = canvas.getBoundingClientRect();
-        ctx.lineTo(event.clientX - rect.left, event.clientY - rect.top);
+        let x = event.clientX - rect.left;
+        let y = event.clientY - rect.top;
+
+        // 发送绘制数据到服务器
+        socket.emit('draw', {x: x, y: y, color: ctx.strokeStyle, size: ctx.lineWidth});
+
+        ctx.lineTo(x, y);
         ctx.stroke();
         ctx.beginPath();
-        ctx.moveTo(event.clientX - rect.left, event.clientY - rect.top);
+        ctx.moveTo(x, y);
     }
+
+    socket.on('draw', function (data) {
+        ctx.strokeStyle = data.color;
+        ctx.lineWidth = data.size;
+        ctx.lineTo(data.x, data.y);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(data.x, data.y);
+    });
+
 
     document.getElementById('colorPicker').addEventListener('change', (event) => {
         ctx.strokeStyle = event.target.value;

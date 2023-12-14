@@ -11,7 +11,7 @@ from .socket_config import socketio
 
 from flask_sslify import SSLify
 
-HOSTNAME = "127.0.0.1"
+HOSTNAME = "192.168.104.220"
 PORT = 3306
 USERNAME = "root"
 # PASSWORD = "2003721gavin?"

@@ -187,6 +187,11 @@ def handle_send_uid(data):
     emit('uid_received', {'UID': uid}, broadcast=True)  # 广播给所有客户端
 
 
+@socketio.on('draw')
+def handle_draw(data):
+    emit('draw', data, broadcast=True, include_self=False)
+
+
 @vac.route('/get-earliest-application', methods=['POST'])
 def get_earliest_application():
     data = request.json

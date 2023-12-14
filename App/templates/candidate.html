@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simple Video Call</title>
+    <title>Candidate meetingRoom</title>
+    <link rel="stylesheet" href="../static/videoChat.css"/>
     <script src="https://download.agora.io/sdk/release/AgoraRTC_N-4.20.0.js"></script>
 
 
@@ -39,6 +40,26 @@
     <div id="output"></div>
 
 
+    <div id="container">
+
+
+        <div id="whiteboard-container">
+            <canvas id="whiteboard" width="480" height="360"></canvas>
+
+            <div class="tools">
+                <div>
+                    <label for="colorPicker">选择颜色：</label>
+                    <input type="color" id="colorPicker" value="#000000">
+                </div>
+                <div>
+                    <label for="brushSize">画笔粗细：</label>
+                    <input type="range" id="brushSize" min="1" max="50" value="5">
+                    <span id="brushSizeDisplay">5</span>px
+                </div>
+                <button id="eraser">清除画布</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -163,6 +184,62 @@
     var channelName = "testChannel";
     var uid = Math.floor(Math.random() * 10000);
     getTokenAndJoinChannel(channelName, uid);
+
+
+    const canvas = document.getElementById('whiteboard');
+    const ctx = canvas.getContext('2d');
+    let drawing = false;
+
+    canvas.addEventListener('mousedown', () => {
+        drawing = true;
+    });
+
+    canvas.addEventListener('mouseup', () => {
+        drawing = false;
+        ctx.beginPath();
+    });
+
+    canvas.addEventListener('mousemove', draw);
+    function draw(event) {
+        if (!drawing) return;
+        ctx.lineWidth = document.getElementById('brushSize').value;
+        ctx.lineCap = 'round';
+        let rect = canvas.getBoundingClientRect();
+        let x = event.clientX - rect.left;
+        let y = event.clientY - rect.top;
+
+        // 发送绘制数据到服务器
+        socket.emit('draw', {x: x, y: y, color: ctx.strokeStyle, size: ctx.lineWidth});
+
+        ctx.lineTo(x, y);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+    }
+
+    socket.on('draw', function (data) {
+        ctx.strokeStyle = data.color;
+        ctx.lineWidth = data.size;
+        ctx.lineTo(data.x, data.y);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(data.x, data.y);
+    });
+
+
+    document.getElementById('colorPicker').addEventListener('change', (event) => {
+        ctx.strokeStyle = event.target.value;
+    });
+
+    document.getElementById('brushSize').addEventListener('input', (event) => {
+        document.getElementById('brushSizeDisplay').textContent = event.target.value;
+    });
+
+    document.getElementById('eraser').addEventListener('click', clearCanvas);
+
+    function clearCanvas() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
 </script>
 </body>
 </html>
