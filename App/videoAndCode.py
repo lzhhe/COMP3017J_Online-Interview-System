@@ -5,7 +5,8 @@ import uuid
 
 from agora_token_builder import RtcTokenBuilder
 from agora_token_builder.RtcTokenBuilder import Role_Publisher
-from flask import Blueprint, request, render_template, jsonify, session, redirect, url_for
+from flask import Blueprint, request, render_template, jsonify, session, redirect, url_for, send_file, \
+    send_from_directory
 from flask_socketio import emit
 
 from .socket_config import socketio
@@ -308,25 +309,29 @@ def get_accepted_applications():
 
 @vac.route('/get-interview-results')
 def get_interview_results():
-    # 查询所有面试结果
+    # 查询所有面试结果及相关信息，包括起始时间和结束时间
     interview_results = db.session.query(
         InterviewResult,
         User.username,
         User.email,
         Position.positionName,
+        MeetingRoom.startTime,
+        MeetingRoom.endTime,
         InterviewResult.grade,
         InterviewResult.evaluation,
         InterviewResult.status
     ).join(Application, Application.AID == InterviewResult.AID
     ).join(User, User.UID == Application.UID
     ).join(Position, Position.PID == Application.PID
+    ).join(MeetingRoom, MeetingRoom.MID == Application.MID
     ).all()
 
     results_data = []
-    for result, username, email, positionName, grade, evaluation, status in interview_results:
-        # 构造视频文件名
-
-
+    for result, username, email, positionName, startTime, endTime, grade, evaluation, status in interview_results:
+        period = startTime.isoformat() + " - " + endTime.isoformat()
+        print(period)
+        video_filename = f"{username}_{period}.webm".replace(':', '_').replace('T', ' ')
+        print("videoname:"+ video_filename)
         result_info = {
             'username': username,
             'email': email,
@@ -334,11 +339,20 @@ def get_interview_results():
             'grade': grade,
             'evaluation': evaluation,
             'status': 'Accepted' if status == 1 else 'Rejected' if status == 0 else 'Pending',
-            # 'videoFilename': video_filename  # 添加视频文件名
+            'videoFilename': f'/video/{video_filename}'   # 添加视频文件名
+
         }
+        print("VideoName: "f'/video/{video_filename}')
         results_data.append(result_info)
 
     return jsonify(results_data)
+
+# @vac.route('/get-video-by-name', methods=['POST'])
+# def get_video_by_name():
+#     data = request.json
+#     filename = data['filename']
+#     video_directory = 'video'  # 确保这是视频文件存储的正确路径
+#     return send_from_directory(video_directory, filename)
 
 @vac.route('/save_video', methods=['POST'])
 def save_video():
@@ -362,3 +376,6 @@ def save_video():
         f.write(video_file)
     print("储存完成")
     return jsonify({'message': 'Video saved successfully!'})
+
+
+

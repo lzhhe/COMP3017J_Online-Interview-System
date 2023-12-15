@@ -163,9 +163,55 @@
                 row.insertCell().textContent = result.positionName;
                 row.insertCell().textContent = result.grade;
                 row.insertCell().textContent = result.evaluation;
-                row.insertCell().textContent = result.status;  // 确保状态已经格式化为可读形式
+                row.insertCell().textContent = result.status;
+
+                {#// 添加按钮单元格
+                const buttonCell = row.insertCell();
+                const button = document.createElement('button');
+                button.textContent = 'Replay';
+                button.addEventListener('click', function () {
+                    fetchAndPlayVideo(result.videoFilename);
+                });
+                buttonCell.appendChild(button);#}
             });
         }
+
+        {#function fetchAndPlayVideo(filename) {
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', '/vac/get-video-by-name', true);
+            xhr.responseType = 'blob';  // 设置响应类型为 Blob
+
+            // 设置请求头以发送 JSON 数据
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            xhr.send(JSON.stringify({filename: filename}));
+
+            xhr.onload = function () {
+                if (this.status === 200) {
+                    // 请求成功，获取 Blob 数据
+                    var blob = this.response;
+
+                    // 使用 Blob URL 播放视频
+                    const videoUrl = URL.createObjectURL(blob);
+                    const videoPlayer = document.createElement('video');
+                    videoPlayer.src = videoUrl;
+                    videoPlayer.controls = true;
+                    videoPlayer.width = 640;
+                    videoPlayer.height = 480;
+
+                    // 显示视频播放器
+                    document.body.appendChild(videoPlayer);
+                    videoPlayer.play();
+
+                    // 选项：当视频播放完毕时释放 Blob URL
+                    videoPlayer.onended = () => {
+                        URL.revokeObjectURL(videoUrl);
+                        document.body.removeChild(videoPlayer);
+                    };
+                } else {
+                    console.error('Error fetching and playing video');
+                }
+            };
+        }#}
 
 
         $(document).ready(function () {
