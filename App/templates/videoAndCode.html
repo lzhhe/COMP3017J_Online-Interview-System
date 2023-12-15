@@ -10,543 +10,536 @@
 
     <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
 
-    <style>
-        #local-video, #remote-video {
-            width: 480px;
-            height: 360px;
-            border: 1px solid black;
-        }
-    </style>
     <title>Video Test & Interactive Whiteboard</title>
     <link rel="stylesheet" href="../static/videoChat.css"/>
 </head>
 <body>
+<div class="grid-container">
+    <div class="item1">
+        <h1>remote</h1>
+        <div id="remote-video"></div>
+    </div>
+    <div class="item2">
+        <h1>local</h1>
+        <div id="local-video"></div>
+    </div>
+    <div class="item3">
+        <button id="startRecording">开始录屏</button>
+        <button id="stopRecording" disabled>停止录屏</button>
+        <video id="screenVideo" controls style="display: none;"></video>
+        <a id="downloadLink" style="display: none;">下载录像</a>
+        <!-- 数据显示表格 -->
+        <table id="applicationTable" border="1">
+            <tr>
+                <th>用户名</th>
+                <th>邮箱</th>
+                <th>应聘职位</th>
+                <th>自我介绍</th>
+                <th>预期薪资</th>
+                <th>时间段</th>
+            </tr>
+        </table>
+
+        <h1>Interview Result Form</h1>
+        <form id="interviewForm" action="/vac/submit-interview-result" method="post">
 
 
-<button id="startRecording">开始录屏</button>
-<button id="stopRecording" disabled>停止录屏</button>
-<video id="screenVideo" controls style="display: none;"></video>
-<a id="downloadLink" style="display: none;">下载录像</a>
+            <label for="grade">Grade:</label>
+            <input type="number" id="grade" name="grade" required><br><br>
 
+            <label for="evaluation">Evaluation:</label>
+            <textarea id="evaluation" name="evaluation" required></textarea><br><br>
 
-<!-- 数据显示表格 -->
-<table id="applicationTable" border="1">
-    <tr>
-        <th>用户名</th>
-        <th>邮箱</th>
-        <th>应聘职位</th>
-        <th>自我介绍</th>
-        <th>预期薪资</th>
-        <th>时间段</th>
-    </tr>
-</table>
+            <label for="status">Status:</label>
+            <select id="status" name="status" required>
+                <option value="0">Reject</option>
+                <option value="1">Accept</option>
+                <option value="2">Pending</option>
+            </select><br><br>
 
-<h2>Interview Result Form</h2>
-<form id="interviewForm" action="/vac/submit-interview-result" method="post">
+            <input type="submit" value="Submit">
+        </form>
+    </div>
+    <div class="item4">
+        <div id="whiteboard-container">
+            <canvas id="whiteboard" width="480" height="360"></canvas>
 
-
-    <label for="grade">Grade:</label>
-    <input type="number" id="grade" name="grade" required><br><br>
-
-    <label for="evaluation">Evaluation:</label>
-    <textarea id="evaluation" name="evaluation" required></textarea><br><br>
-
-    <label for="status">Status:</label>
-    <select id="status" name="status" required>
-        <option value="0">Reject</option>
-        <option value="1">Accept</option>
-        <option value="2">Pending</option>
-    </select><br><br>
-
-    <input type="submit" value="Submit">
-</form>
-
-<select id="languageSelector">
-    <option value="python">Python</option>
-    <option value="java">Java</option>
-</select>
-<select id="problemSelector"></select>
-<div id="problemDescription"></div>
-
-<div id="editor" style="height: 500px; width: 700px;">print("Welcome to the expanded view!")</div>
-
-<button id="runCode">Run Code</button>
-<div id="output"></div>
-
-
-<h3>local</h3>
-<div id="local-video"></div>
-<h3>remote</h3>
-<div id="remote-video"></div>
-
-
-<div id="container">
-
-
-    <div id="whiteboard-container">
-        <canvas id="whiteboard" width="480" height="360"></canvas>
-
-        <div class="tools">
-            <div>
-                <label for="colorPicker">选择颜色：</label>
-                <input type="color" id="colorPicker" value="#000000">
+            <div class="tools">
+                <div>
+                    <label for="colorPicker">选择颜色：</label>
+                    <input type="color" id="colorPicker" value="#000000">
+                </div>
+                <div>
+                    <label for="brushSize">画笔粗细：</label>
+                    <input type="range" id="brushSize" min="1" max="50" value="5">
+                    <span id="brushSizeDisplay">5</span>px
+                </div>
+                <button id="eraser">清除画布</button>
             </div>
-            <div>
-                <label for="brushSize">画笔粗细：</label>
-                <input type="range" id="brushSize" min="1" max="50" value="5">
-                <span id="brushSizeDisplay">5</span>px
-            </div>
-            <button id="eraser">清除画布</button>
         </div>
     </div>
+    <div class="item5">
+        <select id="languageSelector">
+            <option value="python">Python</option>
+            <option value="java">Java</option>
+        </select>
+        <select id="problemSelector"></select>
+        <div id="problemDescription"></div>
+    </div>
+    <div class="item6">
+        <div id="output"></div>
+        <div id="editor" style="height: 500px; width: 700px;">print("Welcome to the expanded view!")</div>
+        <button id="runCode">Run Code</button>
+
+    </div>
+
 </div>
+    <script>
 
-<script>
-
-    var client = AgoraRTC.createClient({mode: "rtc", codec: "vp8"});
-    var localTracks = [];
-    var isJoiningChannel = false;
-    var isChannelJoined = false;
-
-
-    var socket = io.connect('https://' + document.domain + ':' + location.port);
+        var client = AgoraRTC.createClient({mode: "rtc", codec: "vp8"});
+        var localTracks = [];
+        var isJoiningChannel = false;
+        var isChannelJoined = false;
 
 
-    socket.on('connect', function () {
-        fetch('/get_uid')
-            .then(response => response.json())
-            .then(data => {
-                var uid = data.UID;
-                console.log("Received UID from backend:", uid);
-                // 这里可以根据需要发送UID
-                socket.emit('send_uid', {UID: uid});
-            })
-            .catch(error => console.error('Error fetching UID:', error));
-    });
+        var socket = io.connect('https://' + document.domain + ':' + location.port);
 
 
-    // 接收问题描述更新
-    socket.on('problem_description_updated', function (data) {
-        document.getElementById('problemDescription').textContent = data.description;
-        console.log("Received problem description:", data.description);
-    });
-
-    // 接收输出内容更新
-    socket.on('output_updated', function (data) {
-        document.getElementById('output').textContent = data.output;
-        console.log("Received output:", data.output);
-    });
-
-    async function joinChannel(token, channelName, uid) {
-        if (isJoiningChannel || isChannelJoined) {
-            console.log("Joining process is ongoing or already connected to the channel.");
-            return;
-        }
-        isJoiningChannel = true;
-        try {
-            await client.join("b5a04df0256a451ebec8ee8774ef85ff", channelName, token, uid);
-            localTracks = await AgoraRTC.createMicrophoneAndCameraTracks();
-            localTracks[1].play("local-video");
-            await client.publish(localTracks);
-            console.log("Publish local streams successfully");
-            isChannelJoined = true;
-        } catch (error) {
-            console.error('Error joining the channel:', error);
-        } finally {
-            isJoiningChannel = false;
-        }
-    }
-
-    var remoteAudioTrack;
-    client.on("user-published", async (user, mediaType) => {
-        await client.subscribe(user, mediaType);
-        console.log("subscribe success");
-        if (mediaType === "video") {
-            user.videoTrack.play("remote-video");
-        }
-
-        if (mediaType === "audio") {
-            user.audioTrack.play();
-            remoteAudioTrack = user.audioTrack; // 获取远程音频轨道
-        }
-    });
-
-    client.on("user-unpublished", user => {
-        console.log("unpublished user", user);
-        // 可以在这里处理用户停止发布的逻辑
-    });
-
-    async function leaveChannel() {
-        for (let track of localTracks) {
-            track.stop();
-            track.close();
-        }
-        await client.leave();
-        isChannelJoined = false;
-        console.log("Client leaves channel");
-    }
-
-    function getTokenAndJoinChannel(channelName, uid) {
-        fetch(`/vac/get_token?channelName=${channelName}&uid=${uid}`)
-            .then(response => response.json())
-            .then(data => {
-                joinChannel(data.token, channelName, uid);
-            })
-            .catch(error => console.error('Error:', error));
-    }
-
-    var channelName = "testChannel";
-    var uid = Math.floor(Math.random() * 10000);
-    getTokenAndJoinChannel(channelName, uid);
-
-    document.getElementById('startRecording').addEventListener('click', async () => {
-        console.log("开始录制");
-        try {
-            // 获取屏幕和麦克风的音视频流
-            console.log("尝试获取屏幕和麦克风的音视频流");
-            const screenStream = await navigator.mediaDevices.getDisplayMedia({
-                video: true,
-                audio: true // 尝试捕获屏幕音频
-            });
-            console.log("屏幕流获取成功");
-
-            const micStream = await navigator.mediaDevices.getUserMedia({
-                audio: true // 捕获麦克风音频
-            });
-            console.log("麦克风流获取成功");
-
-            // 合并音视频流
-            console.log("合并音视频流");
-            const tracks = [
-                ...screenStream.getVideoTracks(),
-                ...screenStream.getAudioTracks(),
-                ...micStream.getAudioTracks()
-            ];
-            console.log("音视频流合并完成");
-
-            const combinedStream = new MediaStream(tracks);
-            console.log("创建媒体流成功");
-
-            // 初始化MediaRecorder
-            const mediaRecorder = new MediaRecorder(combinedStream);
-            console.log("MediaRecorder 初始化成功");
-
-            // 添加事件监听器
-            let chunks = [];
-            mediaRecorder.ondataavailable = e => {
-                console.log("收到数据块");
-                chunks.push(e.data);
-            };
-            mediaRecorder.onstop = async () => {
-                console.log("录制停止，处理录制的视频数据");
-                const completeBlob = new Blob(chunks, {type: 'video/webm'});
-                fetch('/vac/save_video', {
-                    method: 'POST',
-                    body: completeBlob,
-                    headers: {
-                        'Content-Type': 'video/webm',
-                        'Username': username, // 从变量获取用户名
-                        'Period': period // 从变量获取时间段
-                    }
-                }).then(response => {
-                    console.log("视频数据发送完毕，响应状态: ", response.status);
-                    return response.json();
+        socket.on('connect', function () {
+            fetch('/get_uid')
+                .then(response => response.json())
+                .then(data => {
+                    var uid = data.UID;
+                    console.log("Received UID from backend:", uid);
+                    // 这里可以根据需要发送UID
+                    socket.emit('send_uid', {UID: uid});
                 })
-                    .then(data => console.log("后端响应:", data))
-                    .catch(error => console.error('发送视频数据时出错:', error));
-            };
+                .catch(error => console.error('Error fetching UID:', error));
+        });
 
-            // 开始录制
-            mediaRecorder.start();
-            console.log("MediaRecorder 开始录制");
 
-            // 更改按钮状态
-            document.getElementById('startRecording').disabled = true;
-            document.getElementById('stopRecording').disabled = false;
+        // 接收问题描述更新
+        socket.on('problem_description_updated', function (data) {
+            document.getElementById('problemDescription').textContent = data.description;
+            console.log("Received problem description:", data.description);
+        });
 
-            // 处理停止录制的逻辑
-            document.getElementById('stopRecording').addEventListener('click', () => {
-                console.log("停止录制按钮被点击");
-                mediaRecorder.stop();
-                console.log("MediaRecorder 停止录制");
-                screenStream.getTracks().forEach(track => track.stop()); // 停止屏幕捕获
-                micStream.getTracks().forEach(track => track.stop()); // 停止麦克风捕获
-                document.getElementById('startRecording').disabled = false;
-                document.getElementById('stopRecording').disabled = true;
-            }, {once: true});
-        } catch (error) {
-            console.error('录制过程中出现错误:', error);
+        // 接收输出内容更新
+        socket.on('output_updated', function (data) {
+            document.getElementById('output').textContent = data.output;
+            console.log("Received output:", data.output);
+        });
+
+        async function joinChannel(token, channelName, uid) {
+            if (isJoiningChannel || isChannelJoined) {
+                console.log("Joining process is ongoing or already connected to the channel.");
+                return;
+            }
+            isJoiningChannel = true;
+            try {
+                await client.join("b5a04df0256a451ebec8ee8774ef85ff", channelName, token, uid);
+                localTracks = await AgoraRTC.createMicrophoneAndCameraTracks();
+                localTracks[1].play("local-video");
+                await client.publish(localTracks);
+                console.log("Publish local streams successfully");
+                isChannelJoined = true;
+            } catch (error) {
+                console.error('Error joining the channel:', error);
+            } finally {
+                isJoiningChannel = false;
+            }
         }
-    });
+
+        var remoteAudioTrack;
+        client.on("user-published", async (user, mediaType) => {
+            await client.subscribe(user, mediaType);
+            console.log("subscribe success");
+            if (mediaType === "video") {
+                user.videoTrack.play("remote-video");
+            }
+
+            if (mediaType === "audio") {
+                user.audioTrack.play();
+                remoteAudioTrack = user.audioTrack; // 获取远程音频轨道
+            }
+        });
+
+        client.on("user-unpublished", user => {
+            console.log("unpublished user", user);
+            // 可以在这里处理用户停止发布的逻辑
+        });
+
+        async function leaveChannel() {
+            for (let track of localTracks) {
+                track.stop();
+                track.close();
+            }
+            await client.leave();
+            isChannelJoined = false;
+            console.log("Client leaves channel");
+        }
+
+        function getTokenAndJoinChannel(channelName, uid) {
+            fetch(`/vac/get_token?channelName=${channelName}&uid=${uid}`)
+                .then(response => response.json())
+                .then(data => {
+                    joinChannel(data.token, channelName, uid);
+                })
+                .catch(error => console.error('Error:', error));
+        }
+
+        var channelName = "testChannel";
+        var uid = Math.floor(Math.random() * 10000);
+        getTokenAndJoinChannel(channelName, uid);
+
+        document.getElementById('startRecording').addEventListener('click', async () => {
+            console.log("开始录制");
+            try {
+                // 获取屏幕和麦克风的音视频流
+                console.log("尝试获取屏幕和麦克风的音视频流");
+                const screenStream = await navigator.mediaDevices.getDisplayMedia({
+                    video: true,
+                    audio: true // 尝试捕获屏幕音频
+                });
+                console.log("屏幕流获取成功");
+
+                const micStream = await navigator.mediaDevices.getUserMedia({
+                    audio: true // 捕获麦克风音频
+                });
+                console.log("麦克风流获取成功");
+
+                // 合并音视频流
+                console.log("合并音视频流");
+                const tracks = [
+                    ...screenStream.getVideoTracks(),
+                    ...screenStream.getAudioTracks(),
+                    ...micStream.getAudioTracks()
+                ];
+                console.log("音视频流合并完成");
+
+                const combinedStream = new MediaStream(tracks);
+                console.log("创建媒体流成功");
+
+                // 初始化MediaRecorder
+                const mediaRecorder = new MediaRecorder(combinedStream);
+                console.log("MediaRecorder 初始化成功");
+
+                // 添加事件监听器
+                let chunks = [];
+                mediaRecorder.ondataavailable = e => {
+                    console.log("收到数据块");
+                    chunks.push(e.data);
+                };
+                mediaRecorder.onstop = async () => {
+                    console.log("录制停止，处理录制的视频数据");
+                    const completeBlob = new Blob(chunks, {type: 'video/webm'});
+                    fetch('/vac/save_video', {
+                        method: 'POST',
+                        body: completeBlob,
+                        headers: {
+                            'Content-Type': 'video/webm',
+                            'Username': username, // 从变量获取用户名
+                            'Period': period // 从变量获取时间段
+                        }
+                    }).then(response => {
+                        console.log("视频数据发送完毕，响应状态: ", response.status);
+                        return response.json();
+                    })
+                        .then(data => console.log("后端响应:", data))
+                        .catch(error => console.error('发送视频数据时出错:', error));
+                };
+
+                // 开始录制
+                mediaRecorder.start();
+                console.log("MediaRecorder 开始录制");
+
+                // 更改按钮状态
+                document.getElementById('startRecording').disabled = true;
+                document.getElementById('stopRecording').disabled = false;
+
+                // 处理停止录制的逻辑
+                document.getElementById('stopRecording').addEventListener('click', () => {
+                    console.log("停止录制按钮被点击");
+                    mediaRecorder.stop();
+                    console.log("MediaRecorder 停止录制");
+                    screenStream.getTracks().forEach(track => track.stop()); // 停止屏幕捕获
+                    micStream.getTracks().forEach(track => track.stop()); // 停止麦克风捕获
+                    document.getElementById('startRecording').disabled = false;
+                    document.getElementById('stopRecording').disabled = true;
+                }, {once: true});
+            } catch (error) {
+                console.error('录制过程中出现错误:', error);
+            }
+        });
 
 
-    socket.on('uid_received', function (data) {
-        var uid = data.UID;
-        console.log("UID received from server:", uid);
-        // 发送 UID 到后端
-        fetch('/vac/get-earliest-application', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({UID: uid})
-        })
+        socket.on('uid_received', function (data) {
+            var uid = data.UID;
+            console.log("UID received from server:", uid);
+            // 发送 UID 到后端
+            fetch('/vac/get-earliest-application', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({UID: uid})
+            })
+                .then(response => response.json())
+                .then(data => {
+                    console.log("Response from server:", data);
+                    if (!data.error) {
+                        // 使用从服务器接收到的数据更新表格
+                        updateApplicationTable(data);
+                    } else {
+                        console.error('Error:', data.error);
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+        });
+
+        // 更新表格的函数
+        var AID;
+        var username;
+        var period;
+
+        function updateApplicationTable(data) {
+            var table = document.getElementById('applicationTable');
+            AID = data.AID;
+            username = data.username
+            period = data.interviewStartTime + " - " + data.interviewEndTime;
+            // 清空表格内容，除了标题行
+            for (var i = table.rows.length - 1; i > 0; i--) {
+                table.deleteRow(i);
+            }
+
+            // 插入新的数据行
+            var row = table.insertRow(-1);
+            row.insertCell(0).innerHTML = data.username;
+            row.insertCell(1).innerHTML = data.email;
+            row.insertCell(2).innerHTML = data.positionName;
+            row.insertCell(3).innerHTML = data.introduction;
+            row.insertCell(4).innerHTML = data.salary;
+            row.insertCell(5).innerHTML = data.interviewStartTime + " - " + data.interviewEndTime;
+        }
+
+        var editor = ace.edit("editor");
+        editor.setTheme("ace/theme/monokai");
+        editor.session.setMode("ace/mode/python");
+
+        document.getElementById('interviewForm').addEventListener('submit', function (e) {
+            var editorContent = editor.getValue();
+            var hiddenInput = document.createElement('input');
+            hiddenInput.type = 'hidden';
+            hiddenInput.name = 'editorContent';
+            hiddenInput.value = editorContent;
+            this.appendChild(hiddenInput);
+            var hiddenInput2 = document.createElement('input');
+            hiddenInput2.type = 'hidden';
+            hiddenInput2.name = 'AID';
+            hiddenInput2.value = AID;
+            this.appendChild(hiddenInput2);
+        });
+
+
+        document.getElementById('languageSelector').addEventListener('change', function () {
+            var language = this.value;
+            editor.session.setMode("ace/mode/" + language);
+        });
+
+        function updateEditorContent() {
+            const selectedLanguage = document.getElementById('languageSelector').value;
+            const selectedProblemId = document.getElementById('problemSelector').value;
+
+            fetch('/vac/get_problem_title', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({language: selectedLanguage, proID: selectedProblemId}),
+            }).then(response => response.json())
+                .then(data => {
+                    editor.setValue(data.title || '没有找到题目标题');
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    editor.setValue('发生错误，无法加载题目标题');
+                });
+
+            fetch('/vac/get_problem_description', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({language: selectedLanguage, proID: selectedProblemId}),
+            })
+
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('problemDescription').textContent = data.description || '没有找到题目描述';
+                    sendProblemDescription()
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById('problemDescription').textContent = '发生错误，无法加载题目描述';
+                });
+
+
+        }
+
+        // 监听语言和题目选择器的变化
+        document.getElementById('languageSelector').addEventListener('change', updateEditorContent);
+        document.getElementById('problemSelector').addEventListener('change', updateEditorContent);
+
+
+        let optionValue = 1;//选择的题号
+
+        fetch('/vac/get_problems')
             .then(response => response.json())
             .then(data => {
-                console.log("Response from server:", data);
-                if (!data.error) {
-                    // 使用从服务器接收到的数据更新表格
-                    updateApplicationTable(data);
-                } else {
-                    console.error('Error:', data.error);
-                }
+                const selectElement = document.getElementById('problemSelector');
+                data.forEach(problem => {
+                    const option = document.createElement('option');
+                    optionValue = problem.ProID;
+                    option.textContent = problem.ProID + ": " + problem.Description;
+                    selectElement.appendChild(option);
+                });
             })
             .catch(error => console.error('Error:', error));
-    });
 
-    // 更新表格的函数
-    var AID;
-    var username;
-    var period;
+        let selectedProblemId;
+        document.getElementById('problemSelector').addEventListener('change', function () {
+            selectedProblemId = this.value;
+            console.log("Selected Problem ID: ", selectedProblemId); // 用于调试
+        });
 
-    function updateApplicationTable(data) {
-        var table = document.getElementById('applicationTable');
-        AID = data.AID;
-        username = data.username
-        period = data.interviewStartTime + " - " + data.interviewEndTime;
-        // 清空表格内容，除了标题行
-        for (var i = table.rows.length - 1; i > 0; i--) {
-            table.deleteRow(i);
+
+        const canvas = document.getElementById('whiteboard');
+        const ctx = canvas.getContext('2d');
+        let drawing = false;
+
+        canvas.addEventListener('mousedown', () => {
+            drawing = true;
+        });
+
+        canvas.addEventListener('mouseup', () => {
+            drawing = false;
+            ctx.beginPath();
+        });
+
+        canvas.addEventListener('mousemove', draw);
+
+        function draw(event) {
+            if (!drawing) return;
+            ctx.lineWidth = document.getElementById('brushSize').value;
+            ctx.lineCap = 'round';
+            let rect = canvas.getBoundingClientRect();
+            let x = event.clientX - rect.left;
+            let y = event.clientY - rect.top;
+
+            // 发送绘制数据到服务器
+            socket.emit('draw', {x: x, y: y, color: ctx.strokeStyle, size: ctx.lineWidth});
+
+            ctx.lineTo(x, y);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(x, y);
         }
 
-        // 插入新的数据行
-        var row = table.insertRow(-1);
-        row.insertCell(0).innerHTML = data.username;
-        row.insertCell(1).innerHTML = data.email;
-        row.insertCell(2).innerHTML = data.positionName;
-        row.insertCell(3).innerHTML = data.introduction;
-        row.insertCell(4).innerHTML = data.salary;
-        row.insertCell(5).innerHTML = data.interviewStartTime + " - " + data.interviewEndTime;
-    }
-
-    var editor = ace.edit("editor");
-    editor.setTheme("ace/theme/monokai");
-    editor.session.setMode("ace/mode/python");
-
-    document.getElementById('interviewForm').addEventListener('submit', function (e) {
-        var editorContent = editor.getValue();
-        var hiddenInput = document.createElement('input');
-        hiddenInput.type = 'hidden';
-        hiddenInput.name = 'editorContent';
-        hiddenInput.value = editorContent;
-        this.appendChild(hiddenInput);
-        var hiddenInput2 = document.createElement('input');
-        hiddenInput2.type = 'hidden';
-        hiddenInput2.name = 'AID';
-        hiddenInput2.value = AID;
-        this.appendChild(hiddenInput2);
-    });
+        socket.on('draw', function (data) {
+            ctx.strokeStyle = data.color;
+            ctx.lineWidth = data.size;
+            ctx.lineTo(data.x, data.y);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(data.x, data.y);
+        });
 
 
-    document.getElementById('languageSelector').addEventListener('change', function () {
-        var language = this.value;
-        editor.session.setMode("ace/mode/" + language);
-    });
+        document.getElementById('colorPicker').addEventListener('change', (event) => {
+            ctx.strokeStyle = event.target.value;
+        });
 
-    function updateEditorContent() {
-        const selectedLanguage = document.getElementById('languageSelector').value;
-        const selectedProblemId = document.getElementById('problemSelector').value;
+        document.getElementById('brushSize').addEventListener('input', (event) => {
+            document.getElementById('brushSizeDisplay').textContent = event.target.value;
+        });
 
-        fetch('/vac/get_problem_title', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({language: selectedLanguage, proID: selectedProblemId}),
-        }).then(response => response.json())
-            .then(data => {
-                editor.setValue(data.title || '没有找到题目标题');
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                editor.setValue('发生错误，无法加载题目标题');
-            });
+        document.getElementById('eraser').addEventListener('click', clearCanvas);
 
-        fetch('/vac/get_problem_description', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({language: selectedLanguage, proID: selectedProblemId}),
-        })
-
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById('problemDescription').textContent = data.description || '没有找到题目描述';
-                sendProblemDescription()
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                document.getElementById('problemDescription').textContent = '发生错误，无法加载题目描述';
-            });
-
-
-    }
-
-    // 监听语言和题目选择器的变化
-    document.getElementById('languageSelector').addEventListener('change', updateEditorContent);
-    document.getElementById('problemSelector').addEventListener('change', updateEditorContent);
-
-
-    let optionValue = 1;//选择的题号
-
-    fetch('/vac/get_problems')
-        .then(response => response.json())
-        .then(data => {
-            const selectElement = document.getElementById('problemSelector');
-            data.forEach(problem => {
-                const option = document.createElement('option');
-                optionValue = problem.ProID;
-                option.textContent = problem.ProID + ": " + problem.Description;
-                selectElement.appendChild(option);
-            });
-        })
-        .catch(error => console.error('Error:', error));
-
-    let selectedProblemId;
-    document.getElementById('problemSelector').addEventListener('change', function () {
-        selectedProblemId = this.value;
-        console.log("Selected Problem ID: ", selectedProblemId); // 用于调试
-    });
-
-
-    const canvas = document.getElementById('whiteboard');
-    const ctx = canvas.getContext('2d');
-    let drawing = false;
-
-    canvas.addEventListener('mousedown', () => {
-        drawing = true;
-    });
-
-    canvas.addEventListener('mouseup', () => {
-        drawing = false;
-        ctx.beginPath();
-    });
-
-    canvas.addEventListener('mousemove', draw);
-
-    function draw(event) {
-        if (!drawing) return;
-        ctx.lineWidth = document.getElementById('brushSize').value;
-        ctx.lineCap = 'round';
-        let rect = canvas.getBoundingClientRect();
-        let x = event.clientX - rect.left;
-        let y = event.clientY - rect.top;
-
-        // 发送绘制数据到服务器
-        socket.emit('draw', {x: x, y: y, color: ctx.strokeStyle, size: ctx.lineWidth});
-
-        ctx.lineTo(x, y);
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.moveTo(x, y);
-    }
-
-    socket.on('draw', function (data) {
-        ctx.strokeStyle = data.color;
-        ctx.lineWidth = data.size;
-        ctx.lineTo(data.x, data.y);
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.moveTo(data.x, data.y);
-    });
-
-
-    document.getElementById('colorPicker').addEventListener('change', (event) => {
-        ctx.strokeStyle = event.target.value;
-    });
-
-    document.getElementById('brushSize').addEventListener('input', (event) => {
-        document.getElementById('brushSizeDisplay').textContent = event.target.value;
-    });
-
-    document.getElementById('eraser').addEventListener('click', clearCanvas);
-
-    function clearCanvas() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-    }
-
-
-    document.getElementById('runCode').addEventListener('click', function () {
-        var userCode = editor.getValue();
-        var selectedLanguage = document.getElementById('languageSelector').value;
-        var selectedProblemId = document.getElementById('problemSelector').value; // 获取当前选中的题目编号
-
-        fetch('/vac/execute_code', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                code: userCode,
-                language: selectedLanguage,
-                proID: selectedProblemId // 将题目编号包含在请求体中
-            }),
-        })
-            .then(response => response.json())
-            .then(data => {
-                if (data.output) {
-                    document.getElementById('output').textContent = '输出: ' + data.output;
-                    sendOutputUpdate()
-                } else if (data.error) {
-                    document.getElementById('output').textContent = '错误: ' + data.error;
-                }
-            })
-            .catch((error) => {
-                console.error('Error:', error);
-                document.getElementById('output').textContent = '发生错误：' + error;
-            });
-    });
-
-
-    socket.on('connect', function () {
-        console.log("Connected to Socket.IO server");
-    });
-
-    // 当编辑器内容发生改变时发送更新
-    var isUpdating = false;
-
-    editor.getSession().on('change', function (delta) {
-        if (!isUpdating) {
-            var editorContent = editor.getSession().getValue();
-            console.log("Sending content:", editorContent);
-            socket.emit('update_editor_content', {content: editorContent});
+        function clearCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
         }
-    });
 
-    socket.on('editor_content_updated', function (data) {
-        console.log("Received content:", data.content);
-        isUpdating = true; // 设置更新标志
-        if (editor.getSession().getValue() !== data.content) {
-            editor.session.setValue(data.content);
+
+        document.getElementById('runCode').addEventListener('click', function () {
+            var userCode = editor.getValue();
+            var selectedLanguage = document.getElementById('languageSelector').value;
+            var selectedProblemId = document.getElementById('problemSelector').value; // 获取当前选中的题目编号
+
+            fetch('/vac/execute_code', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    code: userCode,
+                    language: selectedLanguage,
+                    proID: selectedProblemId // 将题目编号包含在请求体中
+                }),
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.output) {
+                        document.getElementById('output').textContent = '输出: ' + data.output;
+                        sendOutputUpdate()
+                    } else if (data.error) {
+                        document.getElementById('output').textContent = '错误: ' + data.error;
+                    }
+                })
+                .catch((error) => {
+                    console.error('Error:', error);
+                    document.getElementById('output').textContent = '发生错误：' + error;
+                });
+        });
+
+
+        socket.on('connect', function () {
+            console.log("Connected to Socket.IO server");
+        });
+
+        // 当编辑器内容发生改变时发送更新
+        var isUpdating = false;
+
+        editor.getSession().on('change', function (delta) {
+            if (!isUpdating) {
+                var editorContent = editor.getSession().getValue();
+                console.log("Sending content:", editorContent);
+                socket.emit('update_editor_content', {content: editorContent});
+            }
+        });
+
+        socket.on('editor_content_updated', function (data) {
+            console.log("Received content:", data.content);
+            isUpdating = true; // 设置更新标志
+            if (editor.getSession().getValue() !== data.content) {
+                editor.session.setValue(data.content);
+            }
+            isUpdating = false; // 清除更新标志
+        });
+
+
+        function sendProblemDescription() {
+            var description = document.getElementById('problemDescription').textContent;
+            socket.emit('problem_description', {description: description});
         }
-        isUpdating = false; // 清除更新标志
-    });
+
+        // 发送输出内容
+        function sendOutputUpdate() {
+            var output = document.getElementById('output').textContent;
+            socket.emit('output_update', {output: output});
+        }
 
 
-    function sendProblemDescription() {
-        var description = document.getElementById('problemDescription').textContent;
-        socket.emit('problem_description', {description: description});
-    }
-
-    // 发送输出内容
-    function sendOutputUpdate() {
-        var output = document.getElementById('output').textContent;
-        socket.emit('output_update', {output: output});
-    }
-
-
-</script>
+    </script>
 
 
 </body>

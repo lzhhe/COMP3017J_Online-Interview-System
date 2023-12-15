@@ -13,36 +13,29 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/ace.js" type="text/javascript"
             charset="utf-8"></script>
-
-    <style>
-        #local-video, #remote-video {
-            width: 480px;
-            height: 360px;
-            border: 1px solid black;
-        }
-    </style>
 </head>
 <body>
 <h2>Simple Video Call</h2>
-<div>
-    <h3>local</h3>
-    <div id="local-video"></div>
-    <h3>remote</h3>
-    <div id="remote-video"></div>
-
-    <div>
-        <h3>Code Editor</h3>
-        <div id="editor" style="width: 600px; height: 400px;"></div>
+<div class="grid-container">
+    <div class="item1">
+        <h1>remote</h1>
+        <div id="remote-video"></div>
     </div>
-    <h3>problemDescription</h3>
-    <div id="problemDescription"></div>
-    <h3>output</h3>
-    <div id="output"></div>
-
-
-    <div id="container">
-
-
+    <div class="item2">
+        <h1>local</h1>
+        <div id="local-video"></div>
+    </div>
+    <div class="item3">
+        <h1>problemDescription</h1>
+        <div id="problemDescription"></div>
+        <div>
+            <h1>Code Editor</h1>
+            <div id="editor" style="width: 600px; height: 400px;"></div>
+            <h1>output</h1>
+            <div id="output"></div>
+        </div>
+    </div>
+    <div class="item4">
         <div id="whiteboard-container">
             <canvas id="whiteboard" width="480" height="360"></canvas>
 
@@ -200,6 +193,7 @@
     });
 
     canvas.addEventListener('mousemove', draw);
+
     function draw(event) {
         if (!drawing) return;
         ctx.lineWidth = document.getElementById('brushSize').value;

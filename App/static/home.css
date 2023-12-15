@@ -225,31 +225,26 @@ body {
 h1, h2 {
     color: #333;
     margin-bottom: 10px;
-    /*居中*/
     text-align: center;
-
 }
 
-/* Form Styling */
-.application-form {
+/* Form and Table Container Styling */
+.application-form, #addPositionForm, #addMeetingRoomForm, #applicationsContainer {
     background: white;
     padding: 20px;
-    margin: 0px auto;
+    margin: 0 auto;
+    margin-top: 50px;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    /*居中*/
     width: 50%;
-    margin-top: 50px;
-
-
 }
 
-.application-form form {
+.application-form form, #addPositionForm form, #addMeetingRoomForm form {
     display: grid;
     grid-gap: 10px;
 }
 
-.application-form label {
+.application-form label, #addPositionForm label, #addMeetingRoomForm label {
     margin-bottom: 5px;
     display: block;
     color: #666;
@@ -257,14 +252,20 @@ h1, h2 {
 
 .application-form input[type='number'],
 .application-form select,
-.application-form textarea {
+.application-form textarea,
+#addPositionForm input[type='number'],
+#addPositionForm select,
+#addPositionForm textarea,
+#addMeetingRoomForm input[type='number'],
+#addMeetingRoomForm select,
+#addMeetingRoomForm textarea {
     width: 100%;
     padding: 10px;
     border: 1px solid #ddd;
     border-radius: 4px;
 }
 
-.application-form button {
+.application-form button, #addPositionForm button, #addMeetingRoomForm button {
     background-color: #5cb85c;
     color: white;
     border: none;
@@ -273,7 +274,7 @@ h1, h2 {
     cursor: pointer;
 }
 
-.application-form button:hover {
+.application-form button:hover, #addPositionForm button:hover, #addMeetingRoomForm button:hover {
     background-color: #4cae4c;
 }
 
@@ -286,203 +287,128 @@ button {
     border-radius: 4px;
     cursor: pointer;
     margin: 20px 0;
+    margin-left: 30%;
 }
 
 button:hover {
     background-color: #025aa5;
 }
 
-/*以下内容是打印出来的两个表格*/
-#applicationsList {
+/* Table Styling */
+#applicationsList, #interviewResultsList, #applicationsContainer {
     display: flex;
-    justify-content: center; /* Horizontally center the content */
-    align-items: center; /* Vertically center the content, if needed */
+    justify-content: center;
+    align-items: center;
     margin: 20px 0;
     overflow-x: auto;
-
 }
 
-#applicationsList table {
+#applicationsList table, #interviewResultsList table, #applicationsContainer table {
     width: 50%;
     border-collapse: collapse;
 }
 
-#applicationsList th,
-#applicationsList td {
+#applicationsList th, #applicationsList td,
+#interviewResultsList th, #interviewResultsList td,
+#applicationsContainer th, #applicationsContainer td {
     text-align: left;
     padding: 8px;
     border-bottom: 1px solid #ddd;
 }
 
-#applicationsList th {
+#applicationsList th, #interviewResultsList th, #applicationsContainer th {
     background-color: #4CAF50;
     color: white;
 }
 
-#applicationsList tr:nth-child(even) {
+#applicationsList tr:nth-child(even), #interviewResultsList tr:nth-child(even), #applicationsContainer tr:nth-child(even) {
     background-color: #f2f2f2;
 }
 
-#applicationsList tr:hover {
+#applicationsList tr:hover, #interviewResultsList tr:hover, #applicationsContainer tr:hover {
     background-color: #ddd;
 }
-/*interviewResultsList*/
-#interviewResultsList {
-    display: flex;
-    justify-content: center; /* Horizontally center the content */
-    align-items: center; /* Vertically center the content, if needed */
-    margin: 20px 0;
+
+/*以下内容是12.15最新版CSS*/
+/*acceptedApplicationsTable&interviewResultsTable*/
+#acceptedApplicationsTable,
+#interviewResultsTable {
+    margin: 20px auto; /* 上下保持20px，左右自动，实现水平居中 */
     overflow-x: auto;
 }
 
-#interviewResultsList table {
-    width: 50%;
+#acceptedApplicationsTable table,
+#interviewResultsTable table {
+    /* width属性可以根据您的具体需求进行调整，例如可以设置为width: 80%;来让表格占据容器宽度的80%，或者width: auto;来让它根据内容自动调整大小。下面的代码示例使用了auto。*/
+    width: auto;
+    margin: auto; /* 添加此属性以确保表格本身也在其容器内水平居中 */
     border-collapse: collapse;
 }
 
-#interviewResultsList th,
-#interviewResultsList td {
+#acceptedApplicationsTable th,
+#acceptedApplicationsTable td,
+#interviewResultsTable th,
+#interviewResultsTable td {
     text-align: left;
     padding: 8px;
     border-bottom: 1px solid #ddd;
+    display: table-cell;
 }
 
-#interviewResultsList th {
+#acceptedApplicationsTable th,
+#interviewResultsTable th {
     background-color: #4CAF50;
     color: white;
 }
 
-#interviewResultsList tr:nth-child(even) {
+#acceptedApplicationsTable tr,
+#interviewResultsTable tr {
+    display: table-row;
+    background-color: #fff; /* 默认背景颜色设置为白色 */
+}
+
+#acceptedApplicationsTable tr:nth-child(even),
+#interviewResultsTable tr:nth-child(even) {
     background-color: #f2f2f2;
 }
 
-#interviewResultsList tr:hover {
+#acceptedApplicationsTable tr:hover,
+#interviewResultsTable tr:hover {
     background-color: #ddd;
 }
 
-/*addPositionForm*/
-#addPositionForm {
-    background: white;
-    padding: 20px;
-    margin: 0px auto;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    /*居中*/
-    width: 50%;
-    margin-top: 50px;
-}
 
-#addPositionForm form {
-    display: grid;
-    grid-gap: 10px;
-}
-
-#addPositionForm label {
-    margin-bottom: 5px;
-    display: block;
-    color: #666;
-}
-
-#addPositionForm input[type='number'],
-#addPositionForm select,
-#addPositionForm textarea {
-    width: 50%;
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-}
-
-#addPositionForm button {
-    background-color: #5cb85c;
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 4px;
-    cursor: pointer;
-}
-
-#addPositionForm button:hover {
-    background-color: #4cae4c;
-}
-
-/*addMeetingRoomForm*/
-#addMeetingRoomForm {
-    background: white;
-    padding: 20px;
-    margin: 0px auto;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    /*居中*/
-    width: 50%;
-    margin-top: 50px;
-}
-
-#addMeetingRoomForm form {
-    display: grid;
-    grid-gap: 10px;
-}
-
-#addMeetingRoomForm label {
-    margin-bottom: 5px;
-    display: block;
-    color: #666;
-}
-
-#addMeetingRoomForm input[type='number'],
-#addMeetingRoomForm select,
-#addMeetingRoomForm textarea {
-    width: 50%;
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-}
-
-#addMeetingRoomForm button {
-    background-color: #5cb85c;
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 4px;
-    cursor: pointer;
-}
-
-#addMeetingRoomForm button:hover {
-    background-color: #4cae4c;
-}
-
-/*applicationsContainer*/
-#applicationsContainer {
-    display: flex;
-    justify-content: center; /* Horizontally center the content */
-    align-items: center; /* Vertically center the content, if needed */
-    margin: 20px 0;
-    overflow-x: auto;
-}
-
-#applicationsContainer table {
-    width: 50%;
+#interviewResultsTable table {
+    width: 100%; /* 修改为100%使表格占满容器宽度 */
     border-collapse: collapse;
 }
 
-#applicationsContainer th,
-#applicationsContainer td {
+#interviewResultsTable th,
+#interviewResultsTable td {
     text-align: left;
     padding: 8px;
     border-bottom: 1px solid #ddd;
+    display: table-cell; /* 确保单元格按表格单元格显示 */
 }
 
-#applicationsContainer th {
+#interviewResultsTable th {
     background-color: #4CAF50;
     color: white;
 }
 
-#applicationsContainer tr:nth-child(even) {
+#interviewResultsTable tr {
+    display: table-row; /* 确保行按表格行显示 */
+    background-color: #fff; /* 默认背景颜色设置为白色 */
+}
+
+#interviewResultsTable tr:nth-child(even) {
     background-color: #f2f2f2;
 }
 
-#applicationsContainer tr:hover {
+#interviewResultsTable tr:hover {
     background-color: #ddd;
 }
 
-/*interviewResultsContainer*/
+/**/
+
 

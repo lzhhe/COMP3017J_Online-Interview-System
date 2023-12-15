@@ -1,37 +1,37 @@
 
-    body {
-        font-family: 'Arial', sans-serif;
-        background-color: #f7f7f7;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        padding-top: 20px;
-    }
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f7f7f7;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 20px;
+    margin: 0;
+    box-sizing: border-box;
+}
 
-    video {
-        margin-bottom: 20px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        border-radius: 8px;
-    }
+canvas {
+    border: 1px solid black;
+    cursor: crosshair;
+    margin-top: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    width: 480px;
+    height: 360px; /* 设置画布的高度，可能需要根据实际情况调整 */
 
-    canvas {
-        border: 1px solid black;
-        cursor: crosshair;
-        margin-top: 20px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        border-radius: 8px;
-    }
+}
 
-    label {
-        margin-right: 10px;
-        display: inline-block;
-        margin-top: 20px;
-    }
+label {
+    margin-right: 10px;
+    display: inline-block;
+    margin-top: 20px;
+}
 
-    #colorPicker {
-        margin-top: 20px;
-    }
-    #whiteboard-container {
+#colorPicker {
+    margin-top: 20px;
+}
+
+#whiteboard-container {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -64,4 +64,336 @@
     background-color: #f7f7f7;
 }
 
+/* Button Styling */
+button {
+    background-color: #0275d8;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin: 20px 0;
+}
 
+button:hover {
+    background-color: #025aa5;
+}
+
+/* applicationTable(模仿以上的tableCss) */
+#applicationTable {
+    margin: 20px auto; /* 上下保持20px，左右自动，实现水平居中 */
+    overflow-x: auto;
+}
+
+#applicationTable table {
+    /* width属性可以根据您的具体需求进行调整，例如可以设置为width: 80%;来让表格占据容器宽度的80%，或者width: auto;来让它根据内容自动调整大小。下面的代码示例使用了auto。*/
+    width: auto;
+    margin: auto; /* 添加此属性以确保表格本身也在其容器内水平居中 */
+    border-collapse: collapse;
+}
+
+#applicationTable th,
+#applicationTable td {
+    text-align: left;
+    padding: 8px;
+    border-bottom: 1px solid #ddd;
+    display: table-cell;
+}
+
+#applicationTable th {
+    background-color: #4CAF50;
+    color: white;
+}
+
+#applicationTable tr {
+    display: table-row;
+    background-color: #fff; /* 默认背景颜色设置为白色 */
+}
+
+#applicationTable tr:nth-child(even) {
+    background-color: #f2f2f2;
+}
+
+#applicationTable tr:hover {
+    background-color: #ddd;
+}
+
+
+.application-form, #addPositionForm, #addMeetingRoomForm, #applicationsContainer {
+    background: white;
+    padding: 20px;
+    margin: 0 auto;
+    margin-top: 50px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    width: 50%;
+}
+
+.application-form form, #addPositionForm form, #addMeetingRoomForm form {
+    display: grid;
+    grid-gap: 10px;
+}
+
+.application-form label, #addPositionForm label, #addMeetingRoomForm label {
+    margin-bottom: 5px;
+    display: block;
+    color: #666;
+}
+
+.application-form input[type='number'],
+.application-form select,
+.application-form textarea,
+#addPositionForm input[type='number'],
+#addPositionForm select,
+#addPositionForm textarea,
+#addMeetingRoomForm input[type='number'],
+#addMeetingRoomForm select,
+#addMeetingRoomForm textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.application-form button, #addPositionForm button, #addMeetingRoomForm button {
+    background-color: #5cb85c;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.application-form button:hover, #addPositionForm button:hover, #addMeetingRoomForm button:hover {
+    background-color: #4cae4c;
+}
+
+/* Button Styling */
+button {
+    background-color: #0275d8;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin: 20px 0;
+    margin-left: 30%;
+}
+
+button:hover {
+    background-color: #025aa5;
+}
+
+/* interviewForm(模仿以上的FORM Css) */
+/* Interview Form Table Styling */
+#interviewForm {
+    background: white;
+    padding: 20px;
+    margin: 0 auto; /* Centering the table */
+    margin-top: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    width: 80%; /* Adjust the width as needed */
+    border-collapse: collapse; /* Remove space between table borders */
+    hight: 50%;
+}
+
+#interviewForm table {
+    width: 100%; /* Table width to fill the container */
+    border-collapse: collapse;
+}
+
+#interviewForm th, #interviewForm td {
+    text-align: left;
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+}
+
+#interviewForm th {
+    background-color: #4CAF50;
+    color: white;
+}
+
+#interviewForm tr:nth-child(even) {
+    background-color: #f2f2f2;
+}
+
+#interviewForm tr:hover {
+    background-color: #ddd;
+}
+
+#interviewForm input[type='text'],
+#interviewForm input[type='number'],
+#interviewForm select,
+#interviewForm textarea {
+    width: 95%; /* Slightly less than the cell width */
+    padding: 8px;
+    margin: 4px 0;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+#interviewForm button {
+    background-color: #0275d8;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 10px;
+
+}
+
+#interviewForm button:hover {
+    background-color: #025aa5;
+}
+
+input[type="submit"] {
+    background-color: #4CAF50; /* Green background */
+    color: white; /* White text */
+    padding: 12px 20px; /* Padding around the text */
+    border: none; /* No border */
+    border-radius: 4px; /* Rounded corners */
+    cursor: pointer; /* Cursor changes to a hand icon */
+    transition: background-color 0.3s ease; /* Smooth transition for hover effect */
+    margin-left: 80%;
+}
+
+input[type="submit"]:hover {
+    background-color: #45a049; /* Darker shade of green on hover */
+}
+
+/*以下是选择框的Css*/
+/* Style for Select Dropdowns */
+select {
+    width: 100%; /* Full width */
+    padding: 8px 12px; /* Padding for better touch */
+    margin: 8px 0; /* Margin for spacing */
+    border: 1px solid #ccc; /* Border color */
+    border-radius: 4px; /* Rounded corners */
+    box-sizing: border-box; /* Box-sizing */
+    cursor: pointer; /* Pointer cursor on hover */
+}
+
+/* Specific Styles for Each Select */
+#languageSelector, #problemSelector {
+    display: block; /* Each select element on a new line */
+    width: 50%; /* Adjust width as needed */
+    margin: 10px auto; /* Center align and spacing */
+}
+
+/* Style for the Problem Description Div */
+#problemDescription {
+    background-color: #f2f2f2; /* Light grey background */
+    border: 1px solid #ddd; /* Light border */
+    padding: 15px; /* Padding inside the div */
+    border-radius: 4px; /* Rounded corners */
+    width: 50%; /* Adjust width as needed */
+    margin: 10px auto; /* Center align and spacing */
+    min-height: 100px; /* Minimum height */
+    box-sizing: border-box; /* Box-sizing */
+}
+
+/*以下是对于摄像头和视频以及画板*/
+h1 {
+
+    color: #333;
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+#local-video, #remote-video {
+    width: 100%;
+    height: 600px; /* Adjust the height as needed */
+    background-color: #ddd; /* Placeholder color */
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.grid-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* 将页面分成两列，左侧占一半，右侧占一半 */
+    grid-template-rows: 1fr 1fr; /* 将页面分成两行，上方占一半，下方占一半 */
+    gap: 1%; /* 间距 */
+    padding: 0.5px; /* 可以根据需要调整 */
+    background-color: #f7f7f7;
+}
+.item1
+{
+    grid-column: 1 / 2; /* 左上区域，跨第1列 */
+    grid-row: 1 / 2; /* 左上区域，跨第1行 */
+    width: 100%; /* 设置宽度为50% */
+    height: 80%; /* 设置高度为50% */
+    border: 1px solid black; /* 添加边框，黑色边框，1像素宽度 */
+}
+
+.item2
+{
+    grid-column: 2 / 3; /* 右上区域，跨第2列 */
+    grid-row: 1 / 2; /* 右上区域，跨第1行 */
+    width: 100%; /* 设置宽度为50% */
+    height: 80%; /* 设置高度为50% */
+    border: 1px solid black; /* 添加边框，黑色边框，1像素宽度 */
+}
+.item3
+{
+    grid-column: 1 / 2; /* 左下区域，跨第1列 */
+    grid-row: 2 / 3; /* 左下区域，跨第2行 */
+    width: 100%; /* 设置宽度为50% */
+    height: 100%; /* 设置高度为50% */
+    border: 1px solid black; /* 添加边框，黑色边框，1像素宽度 */
+}
+
+
+.item4
+{
+    grid-column: 2 / 3; /* 右下区域，跨第2列 */
+    grid-row: 2 / 3; /* 右下区域，跨第2行 */
+    width: 100%; /* 设置宽度为50% */
+    height: 100%; /* 设置高度为50% */
+    border: 1px solid black; /* 添加边框，黑色边框，1像素宽度 */
+}
+.item5
+{
+    grid-column: 1 / 2; /* 右下区域，跨第2列 */
+    grid-row: 3 / 4; /* 右下区域，跨第2行 */
+    width: 100%; /* 设置宽度为50% */
+    height: 100%; /* 设置高度为50% */
+    border: 1px solid black; /* 添加边框，黑色边框，1像素宽度 */
+}
+.item6{
+    grid-column: 2 / 3; /* 右下区域，跨第2列 */
+    grid-row: 3 / 4; /* 右下区域，跨第2行 */
+    width: 100%; /* 设置宽度为50% */
+    height: 100%; /* 设置高度为50% */
+    border: 1px solid black; /* 添加边框，黑色边框，1像素宽度 */
+}
+
+
+/* 以下是对于视频的Css */
+
+
+/*!* remote-video 区域样式 *!*/
+/*.remote-video {*/
+/*    grid-column: 1 / 2; !* 左上区域，跨第1列 *!*/
+/*    grid-row: 1 / 2; !* 左上区域，跨第1行 *!*/
+/*}*/
+
+/*!* local-video 区域样式 *!*/
+/*.local-video {*/
+/*    grid-column: 1 / 2; !* 左下区域，跨第1列 *!*/
+/*    grid-row: 2 / 3; !* 左下区域，跨第2行 *!*/
+/*}*/
+
+/*!* table-info 区域样式 *!*/
+/*.table-info {*/
+/*    grid-column: 2 / 3; !* 右上区域，跨第2列 *!*/
+/*    grid-row: 1 / 2; !* 右上区域，跨第1行 *!*/
+/*}*/
+
+/*!* whiteboard-and-code 区域样式 *!*/
+/*.whiteboard-and-code {*/
+/*    grid-column: 2 / 3; !* 右下区域，跨第2列 *!*/
+/*    grid-row: 2 / 3; !* 右下区域，跨第2行 *!*/
+/*}*/
